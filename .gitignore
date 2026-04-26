@@ -1,0 +1,11 @@
+# 敏感資訊 — 絕對不能上傳
+.env
+.mcp.json
+
+# Claude Code 本地設定（個人偏好，不需要同步）
+.claude/settings.local.json
+
+# 系統雜檔
+.DS_Store
+Thumbs.db
+desktop.ini
