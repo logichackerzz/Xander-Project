@@ -31,8 +31,11 @@
 | 網站 / 前端草稿與需求文件          | `my-agent/100_Todo/drafts/web-projects/`              |
 | 提案書 / 文案 / 腳本               | `my-agent/100_Todo/drafts/proposals/`                 |
 | 資料清洗 / 爬蟲腳本               | `my-agent/100_Todo/drafts/data-work/`                 |
-| 正在進行的專題計畫                 | `my-agent/100_Todo/projects/`                         |
+| 正在進行的專題計畫（文字/規劃）    | `my-agent/100_Todo/projects/`                         |
 | 完成或封存的東西                   | `my-agent/100_Todo/archive/`                          |
+| **網頁專案實際程式碼**             | `my-agent/400_Projects/web/<專案名>/`                 |
+| **資料 / 爬蟲專案實際程式碼**     | `my-agent/400_Projects/data/<專案名>/`                |
+| **App / 後端專案實際程式碼**       | `my-agent/400_Projects/app/<專案名>/`                 |
 | 過去得意的報告 / 作品              | `my-agent/200_Reference/past-work/`                   |
 | 學我的寫作風格（報告語氣）         | `my-agent/200_Reference/writing-samples/reports/`     |
 | 報告模板 / SOP                     | `my-agent/200_Reference/templates/report-templates/`  |

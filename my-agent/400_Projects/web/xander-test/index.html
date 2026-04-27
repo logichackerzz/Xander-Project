@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xander</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 60px 40px;
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      background: linear-gradient(135deg, #7f5af0, #2cb67d);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: #94a1b2;
+      margin-bottom: 40px;
+    }
+
+    .card-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2e2e4a;
+      border-radius: 16px;
+      padding: 28px 32px;
+      width: 200px;
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: #7f5af0;
+    }
+
+    .card .icon { font-size: 2rem; margin-bottom: 12px; }
+    .card h3 { font-size: 1rem; color: #fffffe; }
+
+    .badge {
+      display: inline-block;
+      margin-top: 32px;
+      padding: 6px 18px;
+      border-radius: 999px;
+      border: 1px solid #2cb67d;
+      color: #2cb67d;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <h1>XANDER</h1>
+    <p>AI 協作測試頁面 · 歡迎來到這裡</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="icon">🧪</div>
+        <h3>測試區塊 A</h3>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h3>資料視覺化</h3>
+      </div>
+      <div class="card">
+        <div class="icon">🤖</div>
+        <h3>AI 協作</h3>
+      </div>
+      <div class="card">
+        <div class="icon">🌐</div>
+        <h3>網頁開發</h3>
+      </div>
+    </div>
+
+    <div class="badge">✦ XANDER TEST PAGE v1.0</div>
+  </div>
+
+</body>
+</html>
