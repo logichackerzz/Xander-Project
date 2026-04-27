@@ -5,6 +5,17 @@
 # Claude Code 本地設定（個人偏好，不需要同步）
 .claude/settings.local.json
 
+# Python 虛擬環境
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Node.js 套件
+node_modules/
+.next/
+*.log
+
 # 系統雜檔
 .DS_Store
 Thumbs.db
