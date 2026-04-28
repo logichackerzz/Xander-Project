@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Dialog } from "@base-ui/react/dialog"
 import { X, LoaderCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/lib/toast"
+import { StockSearchInput } from "./StockSearchInput"
 
 const API = "http://localhost:8001/api"
 
@@ -12,7 +13,7 @@ const MARKETS = [
   {
     value: "tw",
     label: "台股",
-    placeholder: "例：2330、0050",
+    placeholder: "例：台積電、2330",
     hint: '後綴自動加「.TW」',
     currency: "TWD（新台幣）",
     autoName: true,
@@ -20,7 +21,7 @@ const MARKETS = [
   {
     value: "us",
     label: "美股",
-    placeholder: "例：AAPL、TSLA",
+    placeholder: "例：Apple、AAPL",
     hint: "直接輸入代碼即可",
     currency: "USD（美元）",
     autoName: true,
@@ -57,56 +58,15 @@ export function AddHoldingDialog({ open, onOpenChange, onSuccess }: Props) {
   const [quantity, setQuantity] = useState("")
   const [cost, setCost] = useState("")
   const [loading, setLoading] = useState(false)
-  const [lookingUp, setLookingUp] = useState(false)
   const [error, setError] = useState("")
-
-  // 追蹤這個名稱是否是使用者手動輸入的（而非自動帶入）
-  const userEditedName = useRef(false)
-  // 上次自動帶入的名稱，用來判斷下次是否可以覆寫
-  const lastAutoName = useRef("")
 
   const selected = MARKETS.find(m => m.value === market)!
 
-  // 切換市場時清空代碼、名稱、自動填入紀錄
   useEffect(() => {
     setSymbol("")
     setName("")
     setError("")
-    userEditedName.current = false
-    lastAutoName.current = ""
   }, [market])
-
-  // 代碼輸入後 700ms debounce，自動查名稱（台股/美股）
-  useEffect(() => {
-    if (!selected.autoName || symbol.trim().length < 1) return
-
-    const timer = setTimeout(async () => {
-      setLookingUp(true)
-      try {
-        const res = await fetch(
-          `${API}/portfolio/lookup?symbol=${encodeURIComponent(symbol.trim())}&market=${market}`
-        )
-        const data = await res.json()
-        if (data.found && data.name) {
-          // 只有在使用者沒有手動改過名稱，或名稱還是上次自動帶入的值時，才覆寫
-          setName(prev => {
-            if (!userEditedName.current || prev === lastAutoName.current) {
-              lastAutoName.current = data.name
-              userEditedName.current = false
-              return data.name
-            }
-            return prev
-          })
-        }
-      } catch {
-        // 查詢失敗不影響使用，使用者可手動填
-      } finally {
-        setLookingUp(false)
-      }
-    }, 700)
-
-    return () => clearTimeout(timer)
-  }, [symbol, market, selected.autoName])
 
   function reset() {
     setSymbol("")
@@ -114,8 +74,6 @@ export function AddHoldingDialog({ open, onOpenChange, onSuccess }: Props) {
     setQuantity("")
     setCost("")
     setError("")
-    userEditedName.current = false
-    lastAutoName.current = ""
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -199,45 +157,36 @@ export function AddHoldingDialog({ open, onOpenChange, onSuccess }: Props) {
               </div>
             </div>
 
-            {/* Symbol */}
+            {/* Symbol / Search */}
             <div>
               <label className="mb-1.5 block text-sm font-medium">股票／幣種代碼</label>
-              <input
-                value={symbol}
-                onChange={e => setSymbol(e.target.value.toUpperCase())}
-                placeholder={selected.placeholder}
-                className={inputCls}
-                autoCapitalize="characters"
-                required
-                disabled={loading}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">{selected.hint}</p>
-            </div>
-
-            {/* Name — 台股/美股 顯示查詢狀態 */}
-            <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
-                顯示名稱
-                {lookingUp && (
-                  <span className="flex items-center gap-1 text-xs font-normal text-muted-foreground">
-                    <LoaderCircle className="size-3 animate-spin" />
-                    查詢中…
-                  </span>
-                )}
-                {!lookingUp && !selected.autoName && (
-                  <span className="font-normal text-xs text-muted-foreground">（可選）</span>
-                )}
-              </label>
-              <input
-                value={name}
-                onChange={e => {
-                  setName(e.target.value)
-                  userEditedName.current = true
-                }}
-                placeholder={selected.autoName ? "輸入代碼後自動帶入" : "例：Bitcoin"}
-                className={inputCls}
-                disabled={loading}
-              />
+              {selected.autoName ? (
+                <StockSearchInput
+                  key={market}
+                  market={market as "tw" | "us"}
+                  value={symbol}
+                  placeholder={selected.placeholder}
+                  disabled={loading}
+                  onChange={val => setSymbol(val)}
+                  onSelect={(sym, sName) => {
+                    setSymbol(sym)
+                    setName(sName)
+                  }}
+                />
+              ) : (
+                <input
+                  value={symbol}
+                  onChange={e => setSymbol(e.target.value.toUpperCase())}
+                  placeholder={selected.placeholder}
+                  className={inputCls}
+                  autoCapitalize="characters"
+                  required
+                  disabled={loading}
+                />
+              )}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {selected.autoName ? "輸入代碼或股票名稱搜尋" : selected.hint}
+              </p>
             </div>
 
             {/* Quantity + Cost */}

@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { Fragment, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { RefreshCw, Trash2, Plus } from "lucide-react"
+import { RefreshCw, Trash2, Plus, ChevronRight, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/lib/toast"
-import type { Holding } from "@/app/portfolio/page"
+import type { GroupedHolding, Holding } from "@/app/portfolio/page"
+import { ClosePositionDialog } from "./ClosePositionDialog"
 
 const BADGE: Record<string, { label: string; cls: string }> = {
   tw:     { label: "台股",   cls: "bg-blue-500/10 text-blue-400" },
@@ -20,21 +21,45 @@ function fmt(n: number, d = 2) {
 }
 
 interface Props {
-  holdings: Holding[]
+  holdings: GroupedHolding[]
   loading: boolean
   onDelete: (id: string) => Promise<void>
   onRefresh: () => void
   onAdd: () => void
 }
 
+type ClosingTarget = {
+  holdingId: string
+  symbol: string
+  name: string
+  market: string
+  maxQuantity: number
+  costPerUnit: number
+  currentPrice: number | null
+}
+
 export function HoldingsTable({ holdings, loading, onDelete, onRefresh, onAdd }: Props) {
   const { toast } = useToast()
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
+  const [closingTarget, setClosingTarget] = useState<ClosingTarget | null>(null)
 
-  async function handleConfirmDelete(h: Holding) {
+  function openClose(h: Holding) {
+    setClosingTarget({
+      holdingId: h.id,
+      symbol: h.symbol,
+      name: h.name,
+      market: h.market,
+      maxQuantity: h.quantity,
+      costPerUnit: h.cost_per_unit,
+      currentPrice: h.current_price,
+    })
+  }
+
+  async function handleConfirmDelete(id: string, label: string) {
     try {
-      await onDelete(h.id)
-      toast(`已刪除 ${h.name}（${h.symbol}）`)
+      await onDelete(id)
+      toast(`已刪除 ${label}`)
     } catch {
       toast("刪除失敗，請重試", "error")
     }
@@ -43,8 +68,16 @@ export function HoldingsTable({ holdings, loading, onDelete, onRefresh, onAdd }:
 
   function requestDelete(id: string) {
     setConfirmingId(id)
-    // 沒有在 4 秒內確認就自動收回
     setTimeout(() => setConfirmingId(prev => (prev === id ? null : prev)), 4000)
+  }
+
+  function toggleExpand(key: string) {
+    setExpandedKeys(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
   }
 
   if (loading) {
@@ -97,7 +130,7 @@ export function HoldingsTable({ holdings, loading, onDelete, onRefresh, onAdd }:
               <th className="px-5 py-2.5 text-left font-medium">名稱</th>
               <th className="px-5 py-2.5 text-left font-medium">市場</th>
               <th className="px-5 py-2.5 text-right font-medium">數量</th>
-              <th className="px-5 py-2.5 text-right font-medium">成本／單位</th>
+              <th className="px-5 py-2.5 text-right font-medium">均攤成本</th>
               <th className="px-5 py-2.5 text-right font-medium">現價</th>
               <th className="px-5 py-2.5 text-right font-medium">市值</th>
               <th className="px-5 py-2.5 text-right font-medium">損益</th>
@@ -106,98 +139,191 @@ export function HoldingsTable({ holdings, loading, onDelete, onRefresh, onAdd }:
             </tr>
           </thead>
           <tbody>
-            {holdings.map(h => {
-              const cur = CURRENCY[h.market]
-              const badge = BADGE[h.market]
-              const up = (h.pnl ?? 0) >= 0
-              const pnlCls = h.pnl == null ? "" : up ? "text-emerald-400" : "text-red-400"
-              const isConfirming = confirmingId === h.id
+            {holdings.map(g => {
+              const cur = CURRENCY[g.market]
+              const badge = BADGE[g.market]
+              const up = (g.pnl ?? 0) >= 0
+              const pnlCls = g.pnl == null ? "" : up ? "text-emerald-400" : "text-red-400"
+              const isMulti = g.lots.length > 1
+              const isExpanded = expandedKeys.has(g.key)
+              const singleId = g.lots[0].id
+              const isConfirmingGroup = !isMulti && confirmingId === singleId
 
               return (
-                <tr
-                  key={h.id}
-                  className="border-b border-border/50 last:border-0 transition-colors hover:bg-muted/30"
-                >
-                  <td className="px-5 py-3.5 font-mono font-semibold">{h.symbol}</td>
-                  <td className="max-w-[8rem] truncate px-5 py-3.5 text-muted-foreground" title={h.name}>{h.name}</td>
-                  <td className="px-5 py-3.5">
-                    <span className={cn("rounded-md px-2 py-0.5 text-xs font-medium", badge.cls)}>
-                      {badge.label}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-right font-mono tabular-nums">
-                    {fmt(h.quantity, h.market === "crypto" ? 4 : 0)}
-                  </td>
-                  <td className="px-5 py-3.5 text-right font-mono tabular-nums">
-                    <span className="mr-1 text-xs text-muted-foreground">{cur}</span>
-                    {fmt(h.cost_per_unit)}
-                  </td>
-                  <td className="px-5 py-3.5 text-right font-mono tabular-nums">
-                    {h.current_price == null ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <>
-                        <span className="mr-1 text-xs text-muted-foreground">{cur}</span>
-                        {fmt(h.current_price)}
-                      </>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5 text-right font-mono tabular-nums">
-                    {h.market_value == null ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <>
-                        <span className="mr-1 text-xs text-muted-foreground">{cur}</span>
-                        {fmt(h.market_value)}
-                      </>
-                    )}
-                  </td>
-                  <td className={cn("px-5 py-3.5 text-right font-mono tabular-nums", pnlCls)}>
-                    {h.pnl == null ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <>{up ? "▲ +" : "▼ "}{fmt(h.pnl)}</>
-                    )}
-                  </td>
-                  <td className={cn("px-5 py-3.5 text-right font-mono font-semibold tabular-nums", pnlCls)}>
-                    {h.pnl_pct == null ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <>{up ? "▲ +" : "▼ "}{fmt(h.pnl_pct)}%</>
-                    )}
-                  </td>
+                <Fragment key={g.key}>
+                  {/* ── Grouped main row ── */}
+                  <tr className="border-b border-border/50 last:border-0 transition-colors hover:bg-muted/30">
+                    <td className="px-5 py-3.5 font-mono font-semibold">
+                      {isMulti && (
+                        <button
+                          onClick={() => toggleExpand(g.key)}
+                          className="mr-1 inline-flex items-center text-muted-foreground hover:text-foreground"
+                        >
+                          {isExpanded
+                            ? <ChevronDown className="size-3.5" />
+                            : <ChevronRight className="size-3.5" />
+                          }
+                        </button>
+                      )}
+                      {g.symbol}
+                      {isMulti && (
+                        <span className="ml-1.5 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground font-normal">
+                          {g.lots.length}
+                        </span>
+                      )}
+                    </td>
+                    <td className="max-w-[8rem] truncate px-5 py-3.5 text-muted-foreground" title={g.name}>
+                      {g.name}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className={cn("rounded-md px-2 py-0.5 text-xs font-medium", badge.cls)}>
+                        {badge.label}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-mono tabular-nums">
+                      {fmt(g.totalQuantity, g.market === "crypto" ? 4 : 0)}
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-mono tabular-nums">
+                      <span className="mr-1 text-xs text-muted-foreground">{cur}</span>
+                      {fmt(g.avgCost)}
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-mono tabular-nums">
+                      {g.current_price == null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <><span className="mr-1 text-xs text-muted-foreground">{cur}</span>{fmt(g.current_price)}</>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-mono tabular-nums">
+                      {g.market_value == null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <><span className="mr-1 text-xs text-muted-foreground">{cur}</span>{fmt(g.market_value)}</>
+                      )}
+                    </td>
+                    <td className={cn("px-5 py-3.5 text-right font-mono tabular-nums", pnlCls)}>
+                      {g.pnl == null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <>{up ? "▲ +" : "▼ "}{fmt(g.pnl)}</>
+                      )}
+                    </td>
+                    <td className={cn("px-5 py-3.5 text-right font-mono font-semibold tabular-nums", pnlCls)}>
+                      {g.pnl_pct == null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <>{up ? "▲ +" : "▼ "}{fmt(g.pnl_pct)}%</>
+                      )}
+                    </td>
+                    <td className="px-3 py-3.5">
+                      {isMulti ? (
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => toggleExpand(g.key)}
+                            className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            {isExpanded ? "收合" : "明細"}
+                          </button>
+                        </div>
+                      ) : isConfirmingGroup ? (
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => setConfirmingId(null)}
+                            className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            取消
+                          </button>
+                          <button
+                            onClick={() => handleConfirmDelete(singleId, `${g.name}（${g.symbol}）`)}
+                            className="rounded bg-destructive/15 px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/25"
+                          >
+                            確認刪除
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => openClose(g.lots[0])}
+                            className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            平倉
+                          </button>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => requestDelete(singleId)}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
 
-                  {/* Delete: 一般 → 確認 → 消失 */}
-                  <td className="px-3 py-3.5">
-                    {isConfirming ? (
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => setConfirmingId(null)}
-                          className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          取消
-                        </button>
-                        <button
-                          onClick={() => handleConfirmDelete(h)}
-                          className="rounded bg-destructive/15 px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/25"
-                        >
-                          確認刪除
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex justify-end">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => requestDelete(h.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
+                  {/* ── Sub-rows for individual lots (multi-lot only) ── */}
+                  {isMulti && isExpanded && g.lots.map((h, idx) => {
+                    const isConfirmingLot = confirmingId === h.id
+                    return (
+                      <tr
+                        key={h.id}
+                        className="border-b border-border/30 last:border-0 bg-muted/20 transition-colors hover:bg-muted/40"
+                      >
+                        <td className="py-2.5 pl-10 pr-5 text-xs text-muted-foreground">
+                          └ 批次 {idx + 1}
+                        </td>
+                        <td className="px-5 py-2.5" />
+                        <td className="px-5 py-2.5" />
+                        <td className="px-5 py-2.5 text-right font-mono tabular-nums text-xs">
+                          {fmt(h.quantity, g.market === "crypto" ? 4 : 0)}
+                        </td>
+                        <td className="px-5 py-2.5 text-right font-mono tabular-nums text-xs">
+                          <span className="mr-1 text-muted-foreground">{cur}</span>
+                          {fmt(h.cost_per_unit)}
+                        </td>
+                        <td className="px-5 py-2.5" />
+                        <td className="px-5 py-2.5" />
+                        <td className="px-5 py-2.5" />
+                        <td className="px-5 py-2.5" />
+                        <td className="px-3 py-2.5">
+                          {isConfirmingLot ? (
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => setConfirmingId(null)}
+                                className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                              >
+                                取消
+                              </button>
+                              <button
+                                onClick={() => handleConfirmDelete(h.id, `${g.name} 批次${idx + 1}`)}
+                                className="rounded bg-destructive/15 px-2 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/25"
+                              >
+                                確認刪除
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => openClose(h)}
+                                className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                              >
+                                平倉
+                              </button>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => requestDelete(h.id)}
+                                className="text-muted-foreground hover:text-destructive"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </Fragment>
               )
             })}
           </tbody>
@@ -207,6 +333,21 @@ export function HoldingsTable({ holdings, loading, onDelete, onRefresh, onAdd }:
       <div className="border-t border-border px-5 py-2.5 text-xs text-muted-foreground">
         ⚠ 股票報價可能有 15 分鐘延遲（yfinance）；Crypto 報價較即時。
       </div>
+
+      {closingTarget && (
+        <ClosePositionDialog
+          open={closingTarget !== null}
+          onOpenChange={open => { if (!open) setClosingTarget(null) }}
+          holdingId={closingTarget.holdingId}
+          symbol={closingTarget.symbol}
+          name={closingTarget.name}
+          market={closingTarget.market}
+          maxQuantity={closingTarget.maxQuantity}
+          costPerUnit={closingTarget.costPerUnit}
+          currentPrice={closingTarget.currentPrice}
+          onSuccess={onRefresh}
+        />
+      )}
     </div>
   )
 }

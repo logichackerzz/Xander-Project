@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Header } from "@/components/layout/Header"
 import { Button } from "@/components/ui/button"
 import { Plus, Upload } from "lucide-react"
@@ -23,8 +23,58 @@ export type Holding = {
   pnl_pct: number | null
 }
 
+export type GroupedHolding = {
+  key: string
+  symbol: string
+  market: "tw" | "us" | "crypto"
+  name: string
+  totalQuantity: number
+  avgCost: number
+  current_price: number | null
+  market_value: number | null
+  pnl: number | null
+  pnl_pct: number | null
+  lots: Holding[]
+}
+
 const MARKET_LABEL: Record<string, string> = { tw: "台股", us: "美股", crypto: "加密貨幣" }
 const MARKET_CURRENCY: Record<string, string> = { tw: "TWD", us: "USD", crypto: "USD" }
+const MARKET_ORDER = { tw: 0, us: 1, crypto: 2 } as const
+
+function groupHoldings(holdings: Holding[]): GroupedHolding[] {
+  const map = new Map<string, GroupedHolding>()
+
+  for (const h of holdings) {
+    const key = `${h.market}:${h.symbol}`
+    if (!map.has(key)) {
+      map.set(key, {
+        key, symbol: h.symbol, market: h.market, name: h.name,
+        totalQuantity: 0, avgCost: 0,
+        current_price: h.current_price,
+        market_value: null, pnl: null, pnl_pct: null,
+        lots: [],
+      })
+    }
+    map.get(key)!.lots.push(h)
+  }
+
+  const groups: GroupedHolding[] = []
+  for (const g of map.values()) {
+    const totalQty = g.lots.reduce((s, h) => s + h.quantity, 0)
+    const weightedCost = g.lots.reduce((s, h) => s + h.quantity * h.cost_per_unit, 0)
+    g.totalQuantity = totalQty
+    g.avgCost = totalQty > 0 ? weightedCost / totalQty : 0
+    g.current_price = g.lots[0].current_price
+    if (g.current_price != null) {
+      g.market_value = g.current_price * totalQty
+      g.pnl = (g.current_price - g.avgCost) * totalQty
+      g.pnl_pct = g.avgCost > 0 ? (g.current_price - g.avgCost) / g.avgCost * 100 : null
+    }
+    groups.push(g)
+  }
+
+  return groups.sort((a, b) => MARKET_ORDER[a.market] - MARKET_ORDER[b.market])
+}
 
 export default function PortfolioPage() {
   const [holdings, setHoldings] = useState<Holding[]>([])
@@ -54,10 +104,12 @@ export default function PortfolioPage() {
     setHoldings(prev => prev.filter(h => h.id !== id))
   }
 
+  const groupedHoldings = useMemo(() => groupHoldings(holdings), [holdings])
+
   const summary = (["tw", "us", "crypto"] as const).map(m => {
-    const mh = holdings.filter(h => h.market === m)
-    const total = mh.reduce((s, h) => s + (h.market_value ?? 0), 0)
-    return { market: m, count: mh.length, total }
+    const mg = groupedHoldings.filter(g => g.market === m)
+    const total = mg.reduce((s, g) => s + (g.market_value ?? 0), 0)
+    return { market: m, count: mg.length, total }
   })
 
   return (
@@ -99,7 +151,7 @@ export default function PortfolioPage() {
         )}
 
         <HoldingsTable
-          holdings={holdings}
+          holdings={groupedHoldings}
           loading={loading}
           onDelete={handleDelete}
           onRefresh={fetchHoldings}
