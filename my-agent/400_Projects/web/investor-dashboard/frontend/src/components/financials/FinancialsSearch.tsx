@@ -89,7 +89,7 @@ export function FinancialsSearch({ onSearch, loading, compact }: Props) {
   }
 
   return (
-    <div ref={containerRef} className={cn("relative w-full", compact ? "max-w-sm" : "max-w-lg")}>
+    <div ref={containerRef} className={cn("relative w-full", compact ? "max-w-sm" : "max-w-2xl")}>
       <div
         className={cn(
           "flex items-center gap-3 rounded-2xl border border-border bg-card/80 backdrop-blur-sm transition-all",

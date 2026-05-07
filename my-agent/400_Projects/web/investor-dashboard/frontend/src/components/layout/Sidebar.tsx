@@ -2,14 +2,16 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Wallet, FileBarChart2, Gauge, TrendingUp } from "lucide-react"
+import { LayoutDashboard, Star, FileBarChart2, Gauge, TrendingUp, CalendarDays } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { label: "總覽", href: "/", icon: LayoutDashboard },
-  { label: "持倉管理", href: "/portfolio", icon: Wallet },
+  { label: "持倉管理", href: "/portfolio", icon: Star },
+  { label: "追蹤清單", href: "/watchlist", icon: Star },
   { label: "財報分析", href: "/financials", icon: FileBarChart2 },
   { label: "市場情緒", href: "/sentiment", icon: Gauge },
+  { label: "市場行事曆", href: "/calendar", icon: CalendarDays },
 ]
 
 export function Sidebar() {
@@ -44,7 +46,7 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-sidebar-border px-5 py-3 text-xs text-sidebar-foreground/40">
-        Week 1 · MVP 開發中
+        Week 5 · 開發中
       </div>
     </aside>
   )

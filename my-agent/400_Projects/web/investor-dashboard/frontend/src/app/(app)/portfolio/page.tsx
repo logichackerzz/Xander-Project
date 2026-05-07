@@ -1,13 +1,12 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import { Header } from "@/components/layout/Header"
 import { Button } from "@/components/ui/button"
 import { Plus, Upload } from "lucide-react"
 import { AddHoldingDialog } from "@/components/portfolio/AddHoldingDialog"
 import { HoldingsTable } from "@/components/portfolio/HoldingsTable"
 
-const API = "http://localhost:8001/api"
+const API = "http://localhost:8002/api"
 
 export type Holding = {
   id: string
@@ -114,18 +113,17 @@ export default function PortfolioPage() {
 
   return (
     <>
-      <Header title="持倉管理" subtitle="台股 · 美股 · 加密貨幣">
-        <Button variant="outline" size="sm" disabled title="OCR 對帳單 — Week 3 實作">
-          <Upload className="size-3.5" />
-          上傳對帳單
-        </Button>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
-          <Plus className="size-3.5" />
-          新增持倉
-        </Button>
-      </Header>
-
       <div className="space-y-5 p-6">
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" disabled title="OCR 對帳單 — Week 6 實作">
+            <Upload className="size-3.5" />
+            上傳對帳單
+          </Button>
+          <Button size="sm" onClick={() => setDialogOpen(true)}>
+            <Plus className="size-3.5" />
+            新增持倉
+          </Button>
+        </div>
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-4">
           {summary.map(({ market, count, total }) => (

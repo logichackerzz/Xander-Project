@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   BarChart, Bar, AreaChart, Area, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
@@ -33,6 +33,7 @@ interface HealthSnap {
   fcf_b: number | null
   gross_margin_pct: number | null
   debt_to_equity: number | null
+  roe_pct: number | null
 }
 
 interface ValuationSnap {
@@ -50,7 +51,7 @@ interface PePoint {
 
 interface Props { symbol: string }
 
-const TABS = ["獲利能力", "財務健康", "估值"] as const
+const TABS = ["獲利能力", "現金 & 結構", "估值"] as const
 type Tab = typeof TABS[number]
 
 const PERIOD_OPTS: { label: string; period: Period; count: number }[] = [
@@ -345,67 +346,64 @@ function GrossMarginCard({ data, loading, error }: { data: HealthPoint[]; loadin
 }
 
 /* ── 估值 helpers ────────────────────────────────── */
-function peTag(pe: number | null): { text: string; color: string } {
+function peVsAvg(pe: number | null, avg: number | null): { text: string; color: string } {
   if (pe === null) return { text: "無資料", color: "text-muted-foreground" }
-  if (pe <= 0)  return { text: "負盈餘",  color: "text-red-400" }
-  if (pe < 15)  return { text: "低估值",  color: "text-emerald-400" }
-  if (pe < 30)  return { text: "合理",    color: "text-muted-foreground" }
-  if (pe < 50)  return { text: "偏貴",    color: "text-yellow-400" }
-  return         { text: "高溢價",        color: "text-red-400" }
-}
-
-function psTag(ps: number | null): { text: string; color: string } {
-  if (ps === null) return { text: "無資料", color: "text-muted-foreground" }
-  if (ps < 1)  return { text: "偏低",  color: "text-emerald-400" }
-  if (ps < 5)  return { text: "合理",  color: "text-muted-foreground" }
-  if (ps < 15) return { text: "偏高",  color: "text-yellow-400" }
-  return        { text: "極高溢價",   color: "text-red-400" }
-}
-
-function pbTag(pb: number | null): { text: string; color: string } {
-  if (pb === null) return { text: "無資料", color: "text-muted-foreground" }
-  if (pb < 1)  return { text: "資產折價", color: "text-emerald-400" }
-  if (pb < 3)  return { text: "合理",     color: "text-muted-foreground" }
-  if (pb < 8)  return { text: "高溢價",   color: "text-yellow-400" }
-  return        { text: "極高溢價",       color: "text-red-400" }
+  if (pe <= 0)     return { text: "負盈餘", color: "text-red-400" }
+  if (avg !== null && avg > 0) {
+    const diff = (pe - avg) / avg * 100
+    if (diff > 20)  return { text: `高於均值 ${diff.toFixed(0)}%`,       color: "text-red-400" }
+    if (diff > 10)  return { text: `略高均值 ${diff.toFixed(0)}%`,       color: "text-yellow-400" }
+    if (diff < -20) return { text: `低於均值 ${Math.abs(diff).toFixed(0)}%`, color: "text-emerald-400" }
+    if (diff < -10) return { text: `略低均值 ${Math.abs(diff).toFixed(0)}%`, color: "text-emerald-400" }
+    return { text: "接近均值", color: "text-muted-foreground" }
+  }
+  return { text: "—", color: "text-muted-foreground" }
 }
 
 /* ── 估值 KPI 小卡行 ─────────────────────────────── */
-function ValuationKpiRow({ snap }: { snap: ValuationSnap }) {
-  const { text: peText, color: peColor } = peTag(snap.pe_trailing)
-  const { text: psText, color: psColor } = psTag(snap.ps)
-  const { text: pbText, color: pbColor } = pbTag(snap.pb)
+function ValuationKpiRow({ snap, peAvg }: { snap: ValuationSnap; peAvg: number | null }) {
+  const { text: peText, color: peColor } = peVsAvg(snap.pe_trailing, peAvg)
 
   return (
-    <div className="grid grid-cols-3 gap-4 mb-4">
-      <div className="rounded-2xl border border-border bg-card px-6 py-5">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">本益比 (P/E)</p>
-        <p className={cn("mt-1.5 text-2xl font-semibold tabular-nums tracking-tight", peColor)}>
-          {snap.pe_trailing !== null ? `${snap.pe_trailing.toFixed(1)}x` : "—"}
-        </p>
-        <div className="mt-1 flex items-center gap-2">
-          <span className={cn("text-xs font-medium", peColor)}>{peText}</span>
-          {snap.pe_forward !== null && (
-            <span className="text-xs text-muted-foreground">預估 {snap.pe_forward.toFixed(1)}x</span>
-          )}
+    <div className="mb-4 space-y-3">
+      <div className="grid grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-border bg-card px-6 py-5">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">本益比 (P/E)</p>
+          <p className={cn("mt-1.5 text-2xl font-semibold tabular-nums tracking-tight", peColor)}>
+            {snap.pe_trailing !== null ? `${snap.pe_trailing.toFixed(1)}x` : "—"}
+          </p>
+          <div className="mt-1 flex items-center gap-2">
+            <span className={cn("text-xs font-medium", peColor)}>{peText}</span>
+            {snap.pe_forward !== null && (
+              <span className="text-xs text-muted-foreground">預估 {snap.pe_forward.toFixed(1)}x</span>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card px-6 py-5">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">市銷率 (P/S)</p>
+          <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight">
+            {snap.ps !== null ? `${snap.ps.toFixed(2)}x` : "—"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">市值 ÷ 年營收</p>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card px-6 py-5">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">股價淨值比 (P/B)</p>
+          <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight">
+            {snap.pb !== null ? `${snap.pb.toFixed(2)}x` : "—"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">市值 ÷ 帳面價值</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card px-6 py-5">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">市銷率 (P/S)</p>
-        <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight">
-          {snap.ps !== null ? `${snap.ps.toFixed(2)}x` : "—"}
-        </p>
-        <p className={cn("mt-1 text-xs font-medium", psColor)}>{psText}</p>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card px-6 py-5">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">股價淨值比 (P/B)</p>
-        <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight">
-          {snap.pb !== null ? `${snap.pb.toFixed(2)}x` : "—"}
-        </p>
-        <p className={cn("mt-1 text-xs font-medium", pbColor)}>{pbText}</p>
-      </div>
+      {snap.ev_ebitda !== null && (
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-card/50 px-5 py-3">
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">EV/EBITDA</span>
+          <span className="text-sm font-semibold tabular-nums">{snap.ev_ebitda.toFixed(1)}x</span>
+          <span className="ml-auto text-xs text-muted-foreground">企業整體價值 ÷ 稅前息前折舊前盈餘</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -418,7 +416,7 @@ function PeHistoryCard({ data, loading, error, snap }: {
   const avg   = valid.length ? valid.reduce((s, d) => s + d.pe!, 0) / valid.length : null
   const last  = valid[valid.length - 1]
   const headline = last?.pe != null ? `${last.pe.toFixed(1)}x` : "—"
-  const { text: tag, color: tagColor } = peTag(last?.pe ?? null)
+  const { text: tag, color: tagColor } = peVsAvg(last?.pe ?? null, avg)
 
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
@@ -488,11 +486,6 @@ function PeHistoryCard({ data, loading, error, snap }: {
         )}
       </div>
 
-      {snap?.ev_ebitda !== null && snap?.ev_ebitda && (
-        <p className="mt-3 text-xs text-muted-foreground">
-          EV/EBITDA：{snap.ev_ebitda.toFixed(1)}x
-        </p>
-      )}
     </div>
   )
 }
@@ -518,6 +511,11 @@ export function IncomeChart({ symbol }: Props) {
 
   const { period, count } = PERIOD_OPTS[periodIdx]
 
+  const peAvg = useMemo(() => {
+    const valid = valData.filter(d => d.pe !== null)
+    return valid.length ? valid.reduce((s, d) => s + d.pe!, 0) / valid.length : null
+  }, [valData])
+
   useEffect(() => {
     if (activeTab !== "獲利能力") return
     setLoading(true)
@@ -530,7 +528,7 @@ export function IncomeChart({ symbol }: Props) {
   }, [symbol, period, count, activeTab])
 
   useEffect(() => {
-    if (activeTab !== "財務健康") return
+    if (activeTab !== "現金 & 結構") return
     setHealthLoading(true)
     setHealthError(false)
     fetch(`${API}/financials/${symbol}/health?period=${period}&count=${count}`)
@@ -578,7 +576,7 @@ export function IncomeChart({ symbol }: Props) {
           ))}
         </div>
 
-        {(activeTab === "獲利能力" || activeTab === "財務健康") && (
+        {(activeTab === "獲利能力" || activeTab === "現金 & 結構") && (
           <div className="flex rounded-xl bg-muted p-1 gap-0.5">
             {PERIOD_OPTS.map((opt, i) => (
               <button
@@ -607,7 +605,7 @@ export function IncomeChart({ symbol }: Props) {
       )}
 
       {/* 財務健康 */}
-      {activeTab === "財務健康" && (
+      {activeTab === "現金 & 結構" && (
         <div>
           {healthSnap && !healthError && <HealthKpiRow snap={healthSnap} />}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -620,7 +618,7 @@ export function IncomeChart({ symbol }: Props) {
       {/* 估值 */}
       {activeTab === "估值" && (
         <div>
-          {valSnap && !valError && <ValuationKpiRow snap={valSnap} />}
+          {valSnap && !valError && <ValuationKpiRow snap={valSnap} peAvg={peAvg} />}
           <PeHistoryCard data={valData} loading={valLoading} error={valError} snap={valSnap} />
         </div>
       )}

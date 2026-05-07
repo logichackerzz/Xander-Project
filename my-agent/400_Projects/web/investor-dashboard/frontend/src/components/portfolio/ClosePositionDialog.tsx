@@ -6,7 +6,7 @@ import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/lib/toast"
 
-const API = "http://localhost:8001/api"
+const API = "http://localhost:8002/api"
 const CURRENCY: Record<string, string> = { tw: "TWD", us: "USD", crypto: "USD" }
 
 function fmt(n: number, d = 2) {

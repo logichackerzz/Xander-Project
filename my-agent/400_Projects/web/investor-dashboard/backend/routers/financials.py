@@ -61,18 +61,38 @@ def get_overview(symbol: str):
         except Exception:
             pass
 
+        roe_raw = _safe(info.get("returnOnEquity"))
+        roe_pct = round(roe_raw * 100, 1) if roe_raw is not None else None
+
+        gm_raw = _safe(info.get("grossMargins"))
+        snap_gm = round(gm_raw * 100, 1) if gm_raw is not None else None
+
+        market_cap = _safe(info.get("marketCap"))
+        week52_high = _safe(info.get("fiftyTwoWeekHigh"))
+        week52_low  = _safe(info.get("fiftyTwoWeekLow"))
+        sector      = info.get("sector") or info.get("industryDisp") or None
+
         return {
             "symbol": symbol.upper(),
             "name": info.get("longName") or info.get("shortName", symbol.upper()),
             "price": price,
             "change_pct": change_pct,
             "currency": info.get("currency", "USD"),
+            "market_cap": market_cap,
+            "week52_high": week52_high,
+            "week52_low":  week52_low,
+            "sector":      sector,
             "kpi": {
                 "revenue_b": _b(latest_revenue),
                 "revenue_yoy_pct": revenue_yoy_pct,
                 "net_margin_pct": net_margin_pct,
-                "pe_trailing": _safe(info.get("trailingPE")),
-                "pe_forward": _safe(info.get("forwardPE")),
+                "roe_pct": roe_pct,
+            },
+            "snap": {
+                "pe_trailing":      _safe(info.get("trailingPE")),
+                "debt_to_equity":   _safe(info.get("debtToEquity")),
+                "fcf_b":            _b(_safe(info.get("freeCashflow"))),
+                "gross_margin_pct": snap_gm,
             },
         }
     except HTTPException:
@@ -172,6 +192,9 @@ def get_health(symbol: str, period: str = "quarterly", count: int = 8):
 
         latest = series[-1] if series else {}
 
+        roe_raw = _safe(info.get("returnOnEquity"))
+        roe_pct = round(roe_raw * 100, 1) if roe_raw is not None else None
+
         return {
             "symbol": symbol.upper(),
             "period": period,
@@ -179,6 +202,7 @@ def get_health(symbol: str, period: str = "quarterly", count: int = 8):
                 "fcf_b":            latest.get("fcf"),
                 "gross_margin_pct": latest.get("gross_margin"),
                 "debt_to_equity":   debt_to_equity,
+                "roe_pct":          roe_pct,
             },
             "data": series,
         }

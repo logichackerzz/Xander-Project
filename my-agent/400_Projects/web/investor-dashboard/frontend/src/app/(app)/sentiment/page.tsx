@@ -1,4 +1,3 @@
-import { Header } from "@/components/layout/Header"
 
 const indicators = [
   { label: "恐懼貪婪指數", value: "—", hint: "加密市場情緒", week: "Week 5" },
@@ -9,8 +8,6 @@ const indicators = [
 export default function SentimentPage() {
   return (
     <>
-      <Header title="市場情緒" subtitle="大盤指標 · 加密情緒 · 財經新聞" />
-
       <div className="space-y-5 p-6">
         <div className="grid grid-cols-3 gap-4">
           {indicators.map((ind) => (

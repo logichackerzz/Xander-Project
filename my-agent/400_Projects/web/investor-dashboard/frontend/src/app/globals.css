@@ -49,6 +49,7 @@
 }
 
 :root {
+  --font-sans: var(--font-ibm-plex-sans);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -127,4 +128,63 @@
   html {
     @apply font-sans;
   }
+}
+
+/* 捲軸暗色系 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(1 0 0 / 15%);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(1 0 0 / 30%);
+}
+
+/* 隱藏橫向捲軸（自選股 / 事件列） */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── 首頁背景色球動畫 ── */
+@keyframes blob-float-1 {
+  0%, 100% { transform: translate(0px,   0px)  scale(1);    }
+  33%       { transform: translate(28px, -20px) scale(1.05); }
+  66%       { transform: translate(-18px, 16px) scale(0.96); }
+}
+@keyframes blob-float-2 {
+  0%, 100% { transform: translate(0px,   0px)  scale(1);    }
+  33%       { transform: translate(-24px, 18px) scale(1.07); }
+  66%       { transform: translate(20px, -14px) scale(0.95); }
+}
+@keyframes blob-float-3 {
+  0%, 100% { transform: translate(0px,   0px)  scale(1);    }
+  40%       { transform: translate(18px,  22px) scale(1.04); }
+  70%       { transform: translate(-24px, -10px) scale(0.97); }
+}
+@keyframes blob-float-4 {
+  0%, 100% { transform: translate(0px,   0px)  scale(1);    }
+  30%       { transform: translate(-20px, -16px) scale(1.06); }
+  65%       { transform: translate(22px,  18px) scale(0.94); }
+}
+
+@keyframes color-indigo {
+  0%, 100% { background-color: rgb(99  102 241 / 0.25); }
+  50%       { background-color: rgb(168  85 247 / 0.32); }
+}
+@keyframes color-cyan {
+  0%, 100% { background-color: rgb(6  182 212 / 0.20); }
+  50%       { background-color: rgb(14 165 233 / 0.28); }
+}
+@keyframes color-violet {
+  0%, 100% { background-color: rgb(139  92 246 / 0.20); }
+  50%       { background-color: rgb(99  102 241 / 0.28); }
+}
+@keyframes color-orange {
+  0%, 100% { background-color: rgb(251 146  60 / 0.15); }
+  50%       { background-color: rgb(245 158  11 / 0.22); }
 }
