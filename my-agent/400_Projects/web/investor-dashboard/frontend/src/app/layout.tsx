@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { IBM_Plex_Sans, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { ToastProvider } from "@/lib/toast"
+import { LayoutShell } from "@/components/layout/LayoutShell"
 
 const ibmPlexSans = IBM_Plex_Sans({
   variable: "--font-ibm-plex-sans",
@@ -31,7 +32,7 @@ export default function RootLayout({
     >
       <body className="flex h-full flex-col bg-background text-foreground">
         <ToastProvider>
-          {children}
+          <LayoutShell>{children}</LayoutShell>
         </ToastProvider>
       </body>
     </html>

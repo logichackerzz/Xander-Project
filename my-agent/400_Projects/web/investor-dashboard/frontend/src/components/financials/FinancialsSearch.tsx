@@ -92,14 +92,14 @@ export function FinancialsSearch({ onSearch, loading, compact }: Props) {
     <div ref={containerRef} className={cn("relative w-full", compact ? "max-w-sm" : "max-w-2xl")}>
       <div
         className={cn(
-          "flex items-center gap-3 rounded-2xl border border-border bg-card/80 backdrop-blur-sm transition-all",
+          "flex items-center gap-3 rounded-2xl border border-indigo-200/60 bg-white/70 backdrop-blur-sm transition-all",
           compact ? "px-4 py-2.5" : "px-5 py-4",
-          "focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20"
+          "focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-300/30"
         )}
       >
         {(loading || fetching)
-          ? <LoaderCircle className={cn("shrink-0 animate-spin text-muted-foreground", compact ? "size-4" : "size-5")} />
-          : <Search className={cn("shrink-0 text-muted-foreground/60", compact ? "size-4" : "size-5")} />
+          ? <LoaderCircle className={cn("shrink-0 animate-spin text-indigo-400", compact ? "size-4" : "size-5")} />
+          : <Search className={cn("shrink-0 text-indigo-300", compact ? "size-4" : "size-5")} />
         }
         <input
           value={query}
@@ -108,26 +108,26 @@ export function FinancialsSearch({ onSearch, loading, compact }: Props) {
           onFocus={() => { if (results.length > 0) setOpen(true) }}
           placeholder={compact ? "換一支股票…" : "輸入股票代碼，例如 AAPL、TSLA、MSFT"}
           className={cn(
-            "flex-1 bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none",
+            "flex-1 bg-transparent text-[#1E1B4B] placeholder:text-slate-400 focus:outline-none",
             compact ? "text-sm" : "text-base"
           )}
         />
       </div>
 
       {open && results.length > 0 && (
-        <ul className="absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-border bg-card shadow-2xl">
+        <ul className="absolute z-50 mt-1.5 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-[0_8px_32px_rgba(99,102,241,0.14)]">
           {results.map((r, i) => (
             <li
               key={r.symbol}
               onMouseDown={() => select(r)}
               className={cn(
-                "flex cursor-pointer items-center gap-3 px-4 py-3 text-sm transition-colors",
-                i === activeIdx ? "bg-muted" : "hover:bg-muted/50",
-                i < results.length - 1 && "border-b border-border/20"
+                "flex cursor-pointer items-center gap-3 px-4 py-3 text-sm transition-colors duration-150",
+                i === activeIdx ? "bg-indigo-100" : "hover:bg-indigo-50",
+                i < results.length - 1 && "border-b border-slate-100"
               )}
             >
-              <span className="w-16 shrink-0 font-mono font-semibold">{r.symbol}</span>
-              <span className="truncate text-muted-foreground">{r.name}</span>
+              <span className="w-16 shrink-0 font-mono font-bold text-indigo-700">{r.symbol}</span>
+              <span className="truncate text-slate-600">{r.name}</span>
             </li>
           ))}
         </ul>

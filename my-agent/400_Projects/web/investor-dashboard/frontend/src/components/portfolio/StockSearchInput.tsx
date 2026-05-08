@@ -112,33 +112,34 @@ export function StockSearchInput({ market, value, placeholder, disabled, onChang
         placeholder={placeholder}
         disabled={disabled}
         className={cn(
-          "w-full rounded-lg border border-input bg-background px-3 py-2 pr-8 text-sm",
-          "placeholder:text-muted-foreground",
-          "focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30",
-          "disabled:opacity-50"
+          "w-full rounded-lg border border-indigo-200/70 bg-white/80 px-3 py-2 pr-8 text-sm text-[#1E1B4B]",
+          "placeholder:text-slate-400",
+          "focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-300/40",
+          "disabled:opacity-50",
+          "transition-colors duration-200"
         )}
       />
       <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
         {loading
-          ? <LoaderCircle className="size-3.5 animate-spin text-muted-foreground" />
-          : <Search className="size-3.5 text-muted-foreground/40" />
+          ? <LoaderCircle className="size-3.5 animate-spin text-indigo-400" />
+          : <Search className="size-3.5 text-indigo-300" />
         }
       </span>
 
       {open && results.length > 0 && (
-        <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-border bg-card shadow-xl">
+        <ul className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-[0_8px_32px_rgba(99,102,241,0.18)]">
           {results.map((r, i) => (
             <li
               key={r.symbol}
               onMouseDown={() => select(r)}
               className={cn(
-                "flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm transition-colors",
-                i === activeIdx ? "bg-muted" : "hover:bg-muted/60",
-                i < results.length - 1 && "border-b border-border/30"
+                "flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm transition-colors duration-150",
+                i === activeIdx ? "bg-indigo-100" : "hover:bg-indigo-50",
+                i < results.length - 1 && "border-b border-slate-100"
               )}
             >
-              <span className="w-14 shrink-0 font-mono font-semibold tabular-nums">{r.symbol}</span>
-              <span className="truncate text-muted-foreground">{r.name}</span>
+              <span className="w-14 shrink-0 font-mono font-bold tabular-nums text-indigo-700">{r.symbol}</span>
+              <span className="truncate text-slate-600">{r.name}</span>
             </li>
           ))}
         </ul>

@@ -55,7 +55,7 @@ export function SummaryCard({ name, kpi, snap }: Props) {
   if (!sentences.length) return null
 
   return (
-    <p className="px-1 text-sm leading-relaxed text-muted-foreground">
+    <p className="px-1 text-sm leading-relaxed text-slate-500">
       {sentences.join("　")}
     </p>
   )

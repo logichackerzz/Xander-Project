@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils"
 const API = "http://localhost:8002/api"
 
 const AXIS_COLOR  = "#94a3b8"
-const GRID_COLOR  = "rgba(255,255,255,0.06)"
-const CURSOR_FILL = "rgba(255,255,255,0.04)"
+const GRID_COLOR  = "rgba(99,102,241,0.07)"
+const CURSOR_FILL = "rgba(99,102,241,0.05)"
 
 type Period = "quarterly" | "annual"
 
@@ -66,11 +66,12 @@ function ChartTooltip({ active, payload, label, unit }: any) {
   const v = payload[0]?.value
   return (
     <div style={{
-      background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)",
+      background: "#ffffff", border: "1px solid rgba(99,102,241,0.18)",
       borderRadius: 10, padding: "8px 12px",
+      boxShadow: "0 4px 16px rgba(99,102,241,0.12)",
     }}>
       <p style={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}>{label}</p>
-      <p style={{ color: payload[0]?.color ?? "#fff", fontSize: 13, fontWeight: 600 }}>
+      <p style={{ color: payload[0]?.color ?? "#1E1B4B", fontSize: 13, fontWeight: 600 }}>
         {v != null ? `${unit === "%" ? "" : "$"}${v}${unit}` : "—"}
       </p>
     </div>
@@ -88,16 +89,16 @@ function RevenueCard({ data, loading, error }: { data: DataPoint[]; loading: boo
     : null
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm p-6 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">營收趨勢</p>
-          <p className="mt-1.5 text-3xl font-semibold tabular-nums tracking-tight">{headline}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">營收趨勢</p>
+          <p className="mt-1.5 text-3xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]">{headline}</p>
         </div>
         {yoy !== null && (
           <span className={cn(
             "mt-1 rounded-full px-2.5 py-1 text-xs font-semibold",
-            yoy >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
+            yoy >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
           )}>
             {yoy >= 0 ? "▲" : "▼"} {Math.abs(yoy).toFixed(1)}% YoY
           </span>
@@ -106,7 +107,7 @@ function RevenueCard({ data, loading, error }: { data: DataPoint[]; loading: boo
 
       <div className="h-44">
         {loading ? (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">載入中…</div>
+          <div className="flex h-full items-center justify-center text-sm text-slate-400">載入中…</div>
         ) : error ? (
           <div className="flex h-full items-center justify-center text-sm text-red-500">無法載入</div>
         ) : (
@@ -136,16 +137,16 @@ function MarginCard({ data, loading, error }: { data: DataPoint[]; loading: bool
     : null
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm p-6 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">淨利率趨勢</p>
-          <p className="mt-1.5 text-3xl font-semibold tabular-nums tracking-tight">{headline}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">淨利率趨勢</p>
+          <p className="mt-1.5 text-3xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]">{headline}</p>
         </div>
         {diff !== null && (
           <span className={cn(
             "mt-1 rounded-full px-2.5 py-1 text-xs font-semibold",
-            diff >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
+            diff >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
           )}>
             {diff >= 0 ? "▲" : "▼"} {Math.abs(diff).toFixed(1)}pp QoQ
           </span>
@@ -154,7 +155,7 @@ function MarginCard({ data, loading, error }: { data: DataPoint[]; loading: bool
 
       <div className="h-44">
         {loading ? (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">載入中…</div>
+          <div className="flex h-full items-center justify-center text-sm text-slate-400">載入中…</div>
         ) : error ? (
           <div className="flex h-full items-center justify-center text-sm text-red-500">無法載入</div>
         ) : (
@@ -169,7 +170,7 @@ function MarginCard({ data, loading, error }: { data: DataPoint[]; loading: bool
               <CartesianGrid vertical={false} stroke={GRID_COLOR} />
               <XAxis dataKey="period" tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} width={38} domain={["auto", "auto"]} />
-              <Tooltip content={<ChartTooltip unit="%" />} cursor={{ stroke: "rgba(255,255,255,0.1)", strokeWidth: 1 }} />
+              <Tooltip content={<ChartTooltip unit="%" />} cursor={{ stroke: "rgba(99,102,241,0.18)", strokeWidth: 1 }} />
               <Area
                 dataKey="net_margin" name="淨利率"
                 stroke="#10b981" strokeWidth={2.5}
@@ -199,35 +200,35 @@ function HealthKpiRow({ snap }: { snap: HealthSnap }) {
   const de = snap.debt_to_equity
   const deStr = de !== null ? de.toFixed(2) : "—"
   const deLabel = de === null ? "無資料" : de > 2 ? "槓桿偏高" : de < 1 ? "財務穩健" : "尚可"
-  const deColor = de === null ? "" : de > 2 ? "text-red-400" : de < 1 ? "text-emerald-400" : ""
+  const deColor = de === null ? "" : de > 2 ? "text-red-500" : de < 1 ? "text-emerald-600" : ""
 
   return (
     <div className="grid grid-cols-3 gap-4 mb-4">
-      <div className="rounded-2xl border border-border bg-card px-6 py-5">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">自由現金流</p>
+      <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm px-6 py-5 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
+        <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">自由現金流</p>
         <p className={cn(
-          "mt-1.5 text-2xl font-semibold tabular-nums tracking-tight",
-          snap.fcf_b !== null && snap.fcf_b < 0 ? "text-red-400" : ""
+          "mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]",
+          snap.fcf_b !== null && snap.fcf_b < 0 ? "text-red-500" : "text-[#1E1B4B]"
         )}>
           {fmtFcf(snap.fcf_b)}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">最新季 FCF</p>
+        <p className="mt-1 text-xs text-slate-400">最新季 FCF</p>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card px-6 py-5">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">毛利率</p>
-        <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight">
+      <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm px-6 py-5 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
+        <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">毛利率</p>
+        <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]">
           {snap.gross_margin_pct !== null ? `${snap.gross_margin_pct.toFixed(1)}%` : "—"}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">最新季</p>
+        <p className="mt-1 text-xs text-slate-400">最新季</p>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card px-6 py-5">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">負債比 (D/E)</p>
-        <p className={cn("mt-1.5 text-2xl font-semibold tabular-nums tracking-tight", deColor)}>
+      <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm px-6 py-5 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
+        <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">負債比 (D/E)</p>
+        <p className={cn("mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]", deColor || "text-[#1E1B4B]")}>
           {deStr}
         </p>
-        <p className={cn("mt-1 text-xs", deColor || "text-muted-foreground")}>{deLabel}</p>
+        <p className={cn("mt-1 text-xs", deColor || "text-slate-400")}>{deLabel}</p>
       </div>
     </div>
   )
@@ -241,13 +242,13 @@ function FcfCard({ data, loading, error }: { data: HealthPoint[]; loading: boole
   const diff = last?.fcf != null && prev?.fcf != null ? last.fcf - prev.fcf : null
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm p-6 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">自由現金流 (FCF)</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">自由現金流 (FCF)</p>
           <p className={cn(
-            "mt-1.5 text-3xl font-semibold tabular-nums tracking-tight",
-            last?.fcf != null && last.fcf < 0 ? "text-red-400" : ""
+            "mt-1.5 text-3xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]",
+            last?.fcf != null && last.fcf < 0 ? "text-red-500" : ""
           )}>
             {headline}
           </p>
@@ -255,7 +256,7 @@ function FcfCard({ data, loading, error }: { data: HealthPoint[]; loading: boole
         {diff !== null && (
           <span className={cn(
             "mt-1 rounded-full px-2.5 py-1 text-xs font-semibold",
-            diff >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
+            diff >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
           )}>
             {diff >= 0 ? "▲" : "▼"} QoQ
           </span>
@@ -264,7 +265,7 @@ function FcfCard({ data, loading, error }: { data: HealthPoint[]; loading: boole
 
       <div className="h-44">
         {loading ? (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">載入中…</div>
+          <div className="flex h-full items-center justify-center text-sm text-slate-400">載入中…</div>
         ) : error ? (
           <div className="flex h-full items-center justify-center text-sm text-red-500">無法載入</div>
         ) : (
@@ -296,16 +297,16 @@ function GrossMarginCard({ data, loading, error }: { data: HealthPoint[]; loadin
     ? last.gross_margin - prev.gross_margin : null
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm p-6 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">毛利率趨勢</p>
-          <p className="mt-1.5 text-3xl font-semibold tabular-nums tracking-tight">{headline}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">毛利率趨勢</p>
+          <p className="mt-1.5 text-3xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]">{headline}</p>
         </div>
         {diff !== null && (
           <span className={cn(
             "mt-1 rounded-full px-2.5 py-1 text-xs font-semibold",
-            diff >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
+            diff >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
           )}>
             {diff >= 0 ? "▲" : "▼"} {Math.abs(diff).toFixed(1)}pp QoQ
           </span>
@@ -314,7 +315,7 @@ function GrossMarginCard({ data, loading, error }: { data: HealthPoint[]; loadin
 
       <div className="h-44">
         {loading ? (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">載入中…</div>
+          <div className="flex h-full items-center justify-center text-sm text-slate-400">載入中…</div>
         ) : error ? (
           <div className="flex h-full items-center justify-center text-sm text-red-500">無法載入</div>
         ) : (
@@ -329,7 +330,7 @@ function GrossMarginCard({ data, loading, error }: { data: HealthPoint[]; loadin
               <CartesianGrid vertical={false} stroke={GRID_COLOR} />
               <XAxis dataKey="period" tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} width={38} domain={["auto", "auto"]} />
-              <Tooltip content={<ChartTooltip unit="%" />} cursor={{ stroke: "rgba(255,255,255,0.1)", strokeWidth: 1 }} />
+              <Tooltip content={<ChartTooltip unit="%" />} cursor={{ stroke: "rgba(99,102,241,0.18)", strokeWidth: 1 }} />
               <Area
                 dataKey="gross_margin" name="毛利率"
                 stroke="#a855f7" strokeWidth={2.5}
@@ -347,17 +348,17 @@ function GrossMarginCard({ data, loading, error }: { data: HealthPoint[]; loadin
 
 /* ── 估值 helpers ────────────────────────────────── */
 function peVsAvg(pe: number | null, avg: number | null): { text: string; color: string } {
-  if (pe === null) return { text: "無資料", color: "text-muted-foreground" }
-  if (pe <= 0)     return { text: "負盈餘", color: "text-red-400" }
+  if (pe === null) return { text: "無資料", color: "text-slate-400" }
+  if (pe <= 0)     return { text: "負盈餘", color: "text-red-500" }
   if (avg !== null && avg > 0) {
     const diff = (pe - avg) / avg * 100
-    if (diff > 20)  return { text: `高於均值 ${diff.toFixed(0)}%`,       color: "text-red-400" }
-    if (diff > 10)  return { text: `略高均值 ${diff.toFixed(0)}%`,       color: "text-yellow-400" }
-    if (diff < -20) return { text: `低於均值 ${Math.abs(diff).toFixed(0)}%`, color: "text-emerald-400" }
-    if (diff < -10) return { text: `略低均值 ${Math.abs(diff).toFixed(0)}%`, color: "text-emerald-400" }
-    return { text: "接近均值", color: "text-muted-foreground" }
+    if (diff > 20)  return { text: `高於均值 ${diff.toFixed(0)}%`,       color: "text-red-500" }
+    if (diff > 10)  return { text: `略高均值 ${diff.toFixed(0)}%`,       color: "text-amber-600" }
+    if (diff < -20) return { text: `低於均值 ${Math.abs(diff).toFixed(0)}%`, color: "text-emerald-600" }
+    if (diff < -10) return { text: `略低均值 ${Math.abs(diff).toFixed(0)}%`, color: "text-emerald-600" }
+    return { text: "接近均值", color: "text-slate-400" }
   }
-  return { text: "—", color: "text-muted-foreground" }
+  return { text: "—", color: "text-slate-400" }
 }
 
 /* ── 估值 KPI 小卡行 ─────────────────────────────── */
@@ -367,41 +368,41 @@ function ValuationKpiRow({ snap, peAvg }: { snap: ValuationSnap; peAvg: number |
   return (
     <div className="mb-4 space-y-3">
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-border bg-card px-6 py-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">本益比 (P/E)</p>
-          <p className={cn("mt-1.5 text-2xl font-semibold tabular-nums tracking-tight", peColor)}>
+        <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm px-6 py-5 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">本益比 (P/E)</p>
+          <p className={cn("mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]", peColor)}>
             {snap.pe_trailing !== null ? `${snap.pe_trailing.toFixed(1)}x` : "—"}
           </p>
           <div className="mt-1 flex items-center gap-2">
             <span className={cn("text-xs font-medium", peColor)}>{peText}</span>
             {snap.pe_forward !== null && (
-              <span className="text-xs text-muted-foreground">預估 {snap.pe_forward.toFixed(1)}x</span>
+              <span className="text-xs text-slate-400">預估 {snap.pe_forward.toFixed(1)}x</span>
             )}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card px-6 py-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">市銷率 (P/S)</p>
-          <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight">
+        <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm px-6 py-5 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">市銷率 (P/S)</p>
+          <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]">
             {snap.ps !== null ? `${snap.ps.toFixed(2)}x` : "—"}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">市值 ÷ 年營收</p>
+          <p className="mt-1 text-xs text-slate-400">市值 ÷ 年營收</p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card px-6 py-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">股價淨值比 (P/B)</p>
-          <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight">
+        <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm px-6 py-5 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">股價淨值比 (P/B)</p>
+          <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]">
             {snap.pb !== null ? `${snap.pb.toFixed(2)}x` : "—"}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">市值 ÷ 帳面價值</p>
+          <p className="mt-1 text-xs text-slate-400">市值 ÷ 帳面價值</p>
         </div>
       </div>
 
       {snap.ev_ebitda !== null && (
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-card/50 px-5 py-3">
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">EV/EBITDA</span>
-          <span className="text-sm font-semibold tabular-nums">{snap.ev_ebitda.toFixed(1)}x</span>
-          <span className="ml-auto text-xs text-muted-foreground">企業整體價值 ÷ 稅前息前折舊前盈餘</span>
+        <div className="flex items-center gap-3 rounded-xl border border-slate-200/60 bg-white/50 px-5 py-3">
+          <span className="text-xs font-semibold uppercase tracking-widest text-indigo-400">EV/EBITDA</span>
+          <span className="text-sm font-semibold tabular-nums text-[#1E1B4B]">{snap.ev_ebitda.toFixed(1)}x</span>
+          <span className="ml-auto text-xs text-slate-400">企業整體價值 ÷ 稅前息前折舊前盈餘</span>
         </div>
       )}
     </div>
@@ -419,36 +420,36 @@ function PeHistoryCard({ data, loading, error, snap }: {
   const { text: tag, color: tagColor } = peVsAvg(last?.pe ?? null, avg)
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm p-6 shadow-[0_4px_20px_rgba(99,102,241,0.08)]">
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">本益比歷史走勢 (TTM P/E)</p>
-          <p className={cn("mt-1.5 text-3xl font-semibold tabular-nums tracking-tight", tagColor)}>
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">本益比歷史走勢 (TTM P/E)</p>
+          <p className={cn("mt-1.5 text-3xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]", tagColor)}>
             {headline}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1 mt-1">
           <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", tagColor,
-            tagColor === "text-red-400"     ? "bg-red-500/10"     :
-            tagColor === "text-yellow-400"  ? "bg-yellow-500/10"  :
-            tagColor === "text-emerald-400" ? "bg-emerald-500/10" : "bg-muted"
+            tagColor === "text-red-500"     ? "bg-red-50"       :
+            tagColor === "text-amber-600"   ? "bg-amber-50"     :
+            tagColor === "text-emerald-600" ? "bg-emerald-50"   : "bg-slate-100"
           )}>
             {tag}
           </span>
           {avg !== null && (
-            <span className="text-xs text-muted-foreground">均值 {avg.toFixed(1)}x</span>
+            <span className="text-xs text-slate-400">均值 {avg.toFixed(1)}x</span>
           )}
         </div>
       </div>
 
       <div className="h-52">
         {loading ? (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">載入中…</div>
+          <div className="flex h-full items-center justify-center text-sm text-slate-400">載入中…</div>
         ) : error ? (
           <div className="flex h-full items-center justify-center text-sm text-red-500">無法載入</div>
         ) : valid.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
-            <p className="text-sm text-muted-foreground">無法計算歷史 P/E（可能為虧損公司）</p>
+            <p className="text-sm text-slate-400">無法計算歷史 P/E（可能為虧損公司）</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -465,7 +466,7 @@ function PeHistoryCard({ data, loading, error, snap }: {
                 tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false}
                 tickFormatter={v => `${v}x`} width={42} domain={["auto", "auto"]}
               />
-              <Tooltip content={<ChartTooltip unit="x" />} cursor={{ stroke: "rgba(255,255,255,0.1)", strokeWidth: 1 }} />
+              <Tooltip content={<ChartTooltip unit="x" />} cursor={{ stroke: "rgba(99,102,241,0.18)", strokeWidth: 1 }} />
               {avg !== null && (
                 <ReferenceLine
                   y={avg}
@@ -559,16 +560,16 @@ export function IncomeChart({ symbol }: Props) {
     <section>
       {/* Tab + Period selector */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex rounded-xl bg-muted p-1 gap-0.5">
+        <div className="flex rounded-xl bg-slate-100/80 p-1 gap-0.5">
           {TABS.map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors",
+                "rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors",
                 activeTab === tab
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-white text-[#1E1B4B] shadow-sm"
+                  : "text-slate-400 hover:text-slate-600"
               )}
             >
               {tab}
@@ -577,16 +578,16 @@ export function IncomeChart({ symbol }: Props) {
         </div>
 
         {(activeTab === "獲利能力" || activeTab === "現金 & 結構") && (
-          <div className="flex rounded-xl bg-muted p-1 gap-0.5">
+          <div className="flex rounded-xl bg-slate-100/80 p-1 gap-0.5">
             {PERIOD_OPTS.map((opt, i) => (
               <button
                 key={opt.label}
                 onClick={() => setPeriodIdx(i)}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
                   periodIdx === i
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-white text-[#1E1B4B] shadow-sm"
+                    : "text-slate-400 hover:text-slate-600"
                 )}
               >
                 {opt.label}

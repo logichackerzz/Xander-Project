@@ -2,15 +2,28 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 import { Dialog } from "@base-ui/react/dialog"
 import { StockSearchInput } from "@/components/portfolio/StockSearchInput"
 import { useToast } from "@/lib/toast"
-import { TrendingUp, TrendingDown, Trash2, Star, X } from "lucide-react"
+import { TrendingUp, TrendingDown, Trash2, Star, X, ArrowUpRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const API = "http://localhost:8002/api"
 
 const MARKET_LABEL: Record<string, string> = { tw: "台股", us: "美股", crypto: "加密" }
+
+const SPRING = { type: "spring", stiffness: 180, damping: 22 } as const
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show:   { opacity: 1, y: 0, transition: SPRING },
+}
+
+const gridVariants = {
+  hidden: {},
+  show:   { transition: { staggerChildren: 0.06, delayChildren: 0.22 } },
+}
 
 type WatchlistItem = {
   symbol: string
@@ -27,12 +40,14 @@ function fmtPrice(v: number | null) {
   return v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+const CARD = "rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 shadow-[0_4px_24px_rgba(99,102,241,0.10)]"
+
 export default function WatchlistPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [items, setItems] = useState<WatchlistItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [items, setItems]             = useState<WatchlistItem[]>([])
+  const [loading, setLoading]         = useState(true)
+  const [error, setError]             = useState("")
   const [searchMarket, setSearchMarket] = useState<SearchMarket>("us")
   const [searchQuery, setSearchQuery] = useState("")
   const [addingSymbol, setAddingSymbol] = useState<string | null>(null)
@@ -57,10 +72,7 @@ export default function WatchlistPage() {
   const handleSelect = async (symbol: string, name: string) => {
     setSearchQuery("")
     const alreadyIn = items.some(i => i.symbol === symbol)
-    if (alreadyIn) {
-      toast(`${symbol} 已在追蹤清單中`)
-      return
-    }
+    if (alreadyIn) { toast(`${symbol} 已在追蹤清單中`); return }
     setAddingSymbol(symbol)
     try {
       await fetch(`${API}/watchlist`, {
@@ -85,160 +97,181 @@ export default function WatchlistPage() {
 
   return (
     <>
+      <div className="relative py-10 pb-16">
+        <div className="mx-auto max-w-5xl px-8">
 
-      <div className="space-y-6 p-6">
+          {/* Header */}
+          <div className="mb-6">
+            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500">
+              自選股
+            </p>
+            <h1 className="mt-1 text-4xl font-bold text-[#1E1B4B]">標的追蹤</h1>
+          </div>
 
-        {/* 搜尋區：glassmorphism card */}
-        <div className="rounded-2xl border border-white/[0.08] bg-slate-900/60 p-5 shadow-lg shadow-black/30 backdrop-blur-md">
-          <p className="mb-3 text-xs font-medium uppercase tracking-widest text-white/40">
-            加入標的
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="flex shrink-0 overflow-hidden rounded-lg border border-white/[0.08]">
-              {(["us", "tw"] as SearchMarket[]).map(m => (
-                <button
-                  key={m}
-                  onClick={() => { setSearchMarket(m); setSearchQuery("") }}
-                  className={cn(
-                    "cursor-pointer px-3 py-1.5 text-xs font-medium transition-colors duration-200",
-                    searchMarket === m
-                      ? "bg-white/15 text-white"
-                      : "text-white/40 hover:text-white/70"
-                  )}
-                >
-                  {m === "us" ? "美股" : "台股"}
-                </button>
+          {/* 搜尋區：relative z-20 讓 stacking context 高於股票卡 */}
+          <div className={cn(CARD, "relative z-20 mb-6 p-5")}>
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-indigo-500">
+              加入標的
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex shrink-0 overflow-hidden rounded-lg border border-indigo-200/60">
+                {(["us", "tw"] as SearchMarket[]).map(m => (
+                  <button
+                    key={m}
+                    onClick={() => { setSearchMarket(m); setSearchQuery("") }}
+                    className={cn(
+                      "cursor-pointer px-3 py-1.5 text-xs font-semibold transition-colors duration-200",
+                      searchMarket === m
+                        ? "bg-indigo-500 text-white"
+                        : "text-slate-400 hover:text-slate-600"
+                    )}
+                  >
+                    {m === "us" ? "美股" : "台股"}
+                  </button>
+                ))}
+              </div>
+              <div className="flex-1">
+                <StockSearchInput
+                  market={searchMarket}
+                  value={searchQuery}
+                  placeholder={searchMarket === "us" ? "輸入代碼或公司名稱（如 AAPL）" : "輸入代號或公司名稱（如 2330）"}
+                  onChange={setSearchQuery}
+                  onSelect={handleSelect}
+                  disabled={!!addingSymbol}
+                />
+              </div>
+            </div>
+            {addingSymbol && (
+              <p className="mt-2 animate-pulse text-xs text-indigo-400">
+                正在加入 {addingSymbol}…
+              </p>
+            )}
+          </div>
+
+          {error && (
+            <div className="mb-4 rounded-xl border border-red-300/40 bg-red-50/80 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {/* Skeleton */}
+          {loading && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[0, 1, 2].map(i => (
+                <div key={i} className={cn(CARD, "animate-pulse p-5")}>
+                  <div className="mb-3 h-2.5 w-14 rounded bg-indigo-100" />
+                  <div className="mb-2 h-4 w-20 rounded bg-slate-200" />
+                  <div className="mt-4 h-7 w-28 rounded bg-slate-200" />
+                </div>
               ))}
             </div>
-            <div className="flex-1">
-              <StockSearchInput
-                market={searchMarket}
-                value={searchQuery}
-                placeholder={searchMarket === "us" ? "輸入代碼或公司名稱（如 AAPL）" : "輸入代號或公司名稱（如 2330）"}
-                onChange={setSearchQuery}
-                onSelect={handleSelect}
-                disabled={!!addingSymbol}
-              />
-            </div>
-          </div>
-          {addingSymbol && (
-            <p className="mt-2 animate-pulse text-xs text-white/40">
-              正在加入 {addingSymbol}…
-            </p>
           )}
-        </div>
 
-        {error && (
-          <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {error}
-          </div>
-        )}
+          {/* 空狀態 */}
+          {!loading && items.length === 0 && !error && (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-indigo-300/40 py-16 text-center">
+              <Star className="size-9 text-indigo-300/60" />
+              <p className="text-sm text-slate-400">
+                搜尋股票代碼或名稱，加入追蹤清單
+              </p>
+            </div>
+          )}
 
-        {/* Skeleton */}
-        {loading && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[0, 1, 2].map(i => (
-              <div key={i} className="animate-pulse rounded-2xl border border-white/[0.06] bg-slate-900/50 p-5 backdrop-blur-sm">
-                <div className="mb-3 h-3 w-16 rounded bg-white/10" />
-                <div className="mb-2 h-5 w-24 rounded bg-white/10" />
-                <div className="h-8 w-32 rounded bg-white/10" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 空狀態 */}
-        {!loading && items.length === 0 && !error && (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/[0.08] py-16 text-center">
-            <Star className="size-9 text-white/10" />
-            <p className="text-sm text-white/30">
-              搜尋股票代碼或名稱，加入追蹤清單
-            </p>
-          </div>
-        )}
-
-        {/* 股票卡片 grid */}
-        {!loading && items.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map(item => {
-              const up = item.change_pct !== null && item.change_pct >= 0
-              return (
-                <div
-                  key={item.symbol}
-                  onClick={() => router.push(`/financials?ticker=${item.symbol}`)}
-                  className="group cursor-pointer rounded-2xl border border-white/[0.08] bg-slate-900/60 p-5 shadow-lg shadow-black/20 backdrop-blur-md transition-all duration-200 hover:border-white/[0.15] hover:bg-slate-800/70 hover:shadow-xl hover:shadow-black/30"
-                >
-                  <div className="mb-4 flex items-center justify-between">
-                    <span className="rounded-full border border-white/[0.08] bg-white/[0.06] px-2 py-0.5 text-[10px] font-medium tracking-wide text-white/50">
-                      {MARKET_LABEL[item.market] ?? item.market}
-                    </span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setDeleteTarget(item) }}
-                      className="cursor-pointer rounded-lg p-1 text-white/20 transition-colors duration-200 hover:bg-red-500/10 hover:text-red-400"
-                      title="移除"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-white/40">
-                    {item.symbol}
-                  </p>
-                  <p className="mt-0.5 truncate text-base font-semibold text-white/80">
-                    {item.name}
-                  </p>
-
-                  <div className="mt-4 flex items-end justify-between">
-                    <p className="text-2xl font-semibold tabular-nums text-white">
-                      {fmtPrice(item.price)}
-                    </p>
-                    {item.change_pct !== null ? (
-                      <div className={cn(
-                        "flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold",
-                        up ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
-                      )}>
-                        {up ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
-                        <span>{up ? "+" : ""}{item.change_pct.toFixed(2)}%</span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-white/20">—</span>
+          {/* 股票卡片 grid */}
+          {!loading && items.length > 0 && (
+            <motion.div
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+              variants={gridVariants}
+              initial="hidden"
+              animate="show"
+            >
+              {items.map(item => {
+                const up = item.change_pct !== null && item.change_pct >= 0
+                return (
+                  <motion.div
+                    key={item.symbol}
+                    variants={cardVariants}
+                    onClick={() => router.push(`/financials?ticker=${item.symbol}`)}
+                    className={cn(
+                      CARD,
+                      "group cursor-pointer p-5 transition-all duration-200",
+                      "hover:bg-white/90 hover:shadow-[0_8px_32px_rgba(99,102,241,0.18)] hover:scale-[1.02]"
                     )}
-                  </div>
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <span className="rounded-full border border-indigo-200/60 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-semibold tracking-widest text-indigo-500 uppercase">
+                        {MARKET_LABEL[item.market] ?? item.market}
+                      </span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(item) }}
+                        className="cursor-pointer rounded-lg p-1 text-slate-300 transition-colors duration-200 hover:bg-red-50 hover:text-red-400"
+                        title="移除"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
 
-                  <p className="mt-3 text-xs text-transparent transition-colors duration-200 group-hover:text-white/30">
-                    查看財報 →
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-        )}
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                      {item.symbol}
+                    </p>
+                    <p className="mt-0.5 truncate text-base font-semibold text-[#1E1B4B]">
+                      {item.name}
+                    </p>
+
+                    <div className="mt-4 flex items-end justify-between">
+                      <p className="text-2xl font-bold tabular-nums text-[#1E1B4B]">
+                        {fmtPrice(item.price)}
+                      </p>
+                      {item.change_pct !== null ? (
+                        <div className={cn(
+                          "flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold",
+                          up ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
+                        )}>
+                          {up ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
+                          <span>{up ? "+" : ""}{item.change_pct.toFixed(2)}%</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-300">—</span>
+                      )}
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-1 text-xs text-transparent transition-colors duration-200 group-hover:text-indigo-400">
+                      <span>查看財報</span>
+                      <ArrowUpRight className="size-3" />
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          )}
+
+        </div>
       </div>
 
       <Dialog.Root open={!!deleteTarget} onOpenChange={open => { if (!open) setDeleteTarget(null) }}>
         <Dialog.Portal>
-          <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-          <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-2xl">
+          <Dialog.Backdrop className="fixed inset-0 z-40 bg-indigo-950/20 backdrop-blur-sm" />
+          <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/60 bg-white/90 backdrop-blur-md p-6 shadow-2xl">
             <div className="mb-1 flex items-start justify-between">
-              <Dialog.Title className="text-base font-semibold">移除追蹤標的</Dialog.Title>
-              <Dialog.Close className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+              <Dialog.Title className="text-base font-semibold text-[#1E1B4B]">移除追蹤標的</Dialog.Title>
+              <Dialog.Close className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
                 <X className="size-4" />
               </Dialog.Close>
             </div>
-            <Dialog.Description className="mb-5 text-sm text-muted-foreground">
+            <Dialog.Description className="mb-5 text-sm text-slate-500">
               確定要將{" "}
-              <span className="font-semibold text-foreground">
+              <span className="font-semibold text-[#1E1B4B]">
                 {deleteTarget?.name || deleteTarget?.symbol}
               </span>{" "}
               從追蹤清單移除嗎？
             </Dialog.Description>
             <div className="flex gap-2">
-              <Dialog.Close className="flex-1 rounded-lg border border-border bg-transparent px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted">
+              <Dialog.Close className="flex-1 rounded-lg border border-slate-200 bg-transparent px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50">
                 取消
               </Dialog.Close>
               <button
                 onClick={confirmDelete}
-                className="flex-1 rounded-lg bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90"
+                className="flex-1 rounded-lg bg-red-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
               >
                 確定移除
               </button>

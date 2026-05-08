@@ -2,11 +2,15 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
+
+const SLIDE = { duration: 0.34, ease: [0.25, 0.46, 0.45, 0.94] } as const
 import { FinancialsSearch } from "@/components/financials/FinancialsSearch"
 import { CompanyCard } from "@/components/financials/CompanyCard"
 import { KpiCards } from "@/components/financials/KpiCards"
 import { IncomeChart } from "@/components/financials/IncomeChart"
 import { SummaryCard } from "@/components/financials/SummaryCard"
+
 
 const API = "http://localhost:8002/api"
 
@@ -45,7 +49,7 @@ interface OverviewData {
 function FinancialsContent() {
   const searchParams = useSearchParams()
   const [data, setData] = useState<OverviewData | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(() => !!searchParams.get("ticker"))
   const [error, setError] = useState<string | null>(null)
   const [watchlistSymbols, setWatchlistSymbols] = useState<Set<string>>(new Set())
 
@@ -105,16 +109,24 @@ function FinancialsContent() {
   }
 
   return (
-    <>
+    <AnimatePresence mode="wait" initial={false}>
 
-      {/* 空狀態：Hero 搜尋 */}
-      {!data && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-20">
+      {/* Hero：無資料且未 loading */}
+      {!data && !loading && (
+        <motion.div
+          key="hero"
+          className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-20"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, y: -16 }}
+          transition={SLIDE}
+        >
           <div className="text-center">
-            <h2 className="text-5xl font-semibold tracking-tight">
+            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400 mb-2">財報分析</p>
+            <h2 className="text-5xl font-semibold tracking-tight text-[#1E1B4B]">
               了解一間公司，從這裡開始。
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <p className="mt-4 text-lg text-slate-400">
               輸入代碼，直接看數字。不用讀新聞。
             </p>
           </div>
@@ -127,7 +139,7 @@ function FinancialsContent() {
                 key={p.symbol}
                 onClick={() => handleSearch(p.symbol)}
                 disabled={loading}
-                className="rounded-full border border-border bg-card/60 px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:border-ring hover:text-foreground disabled:opacity-40"
+                className="rounded-full border border-indigo-200/60 bg-white/60 px-4 py-1.5 text-sm text-slate-500 transition-colors hover:border-indigo-400 hover:text-indigo-600 disabled:opacity-40"
               >
                 {p.label}
               </button>
@@ -135,68 +147,89 @@ function FinancialsContent() {
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
-        </div>
+        </motion.div>
       )}
 
-      {/* Skeleton */}
-      {loading && !data && (
-        <div className="mx-auto w-full max-w-4xl animate-pulse space-y-6 px-6 py-8">
-          <div className="border-b border-border/40 pb-6">
-            <div className="mb-2 h-3 w-20 rounded bg-muted" />
-            <div className="h-8 w-56 rounded bg-muted" />
+      {/* Skeleton：loading 中且尚無資料 */}
+      {!data && loading && (
+        <motion.div
+          key="skeleton"
+          className="mx-auto w-full max-w-4xl animate-pulse space-y-6 px-6 py-8"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={SLIDE}
+        >
+          <div className="border-b border-slate-200/60 pb-6">
+            <div className="mb-2 h-3 w-20 rounded bg-indigo-100" />
+            <div className="h-8 w-56 rounded bg-slate-200" />
             <div className="mt-4 flex gap-4">
-              <div className="h-3 w-28 rounded bg-muted" />
-              <div className="h-3 w-44 rounded bg-muted" />
+              <div className="h-3 w-28 rounded bg-slate-200" />
+              <div className="h-3 w-44 rounded bg-slate-200" />
             </div>
           </div>
-          <div className="rounded-2xl border border-border bg-card/50 px-6 py-5">
-            <div className="mb-3 h-3 w-16 rounded bg-muted" />
-            <div className="mb-2 h-4 w-full rounded bg-muted" />
-            <div className="h-4 w-3/4 rounded bg-muted" />
+          <div className="rounded-2xl border border-white/60 bg-white/70 px-6 py-5">
+            <div className="mb-3 h-3 w-16 rounded bg-indigo-100" />
+            <div className="mb-2 h-4 w-full rounded bg-slate-200" />
+            <div className="h-4 w-3/4 rounded bg-slate-200" />
           </div>
           <div className="grid grid-cols-3 gap-4">
             {[0, 1, 2].map(i => (
-              <div key={i} className="rounded-2xl border border-border bg-card px-6 py-5">
-                <div className="mb-3 h-3 w-20 rounded bg-muted" />
-                <div className="mb-2 h-7 w-24 rounded bg-muted" />
-                <div className="h-3 w-14 rounded bg-muted" />
+              <div key={i} className="rounded-2xl border border-white/60 bg-white/70 px-6 py-5">
+                <div className="mb-3 h-3 w-20 rounded bg-indigo-100" />
+                <div className="mb-2 h-7 w-24 rounded bg-slate-200" />
+                <div className="h-3 w-14 rounded bg-slate-200" />
               </div>
             ))}
           </div>
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <div className="mb-4 h-4 w-40 rounded bg-muted" />
-            <div className="h-52 w-full rounded bg-muted" />
+          <div className="rounded-2xl border border-white/60 bg-white/70 p-6">
+            <div className="mb-4 h-4 w-40 rounded bg-indigo-100" />
+            <div className="h-52 w-full rounded bg-slate-200" />
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {/* 已選股：內容區 */}
+      {/* 資料區 */}
       {data && (
-        <div className="mx-auto w-full max-w-4xl space-y-6 px-6 py-8">
+        <motion.div
+          key="data"
+          className="mx-auto w-full max-w-4xl space-y-6 px-6 py-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={SLIDE}
+        >
           <div className="flex items-center justify-between gap-4">
             <FinancialsSearch onSearch={handleSearch} loading={loading} compact />
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
 
-          <CompanyCard
-            data={data}
-            inWatchlist={watchlistSymbols.has(data.symbol)}
-            onToggleWatchlist={handleToggleWatchlist}
-          />
+          <motion.div
+            animate={{ opacity: loading ? 0.45 : 1 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <CompanyCard
+              data={data}
+              inWatchlist={watchlistSymbols.has(data.symbol)}
+              onToggleWatchlist={handleToggleWatchlist}
+            />
 
-          <div className="space-y-3">
-            <KpiCards kpi={data.kpi} />
-            <SummaryCard name={data.name} kpi={data.kpi} snap={data.snap} />
-          </div>
+            <div className="space-y-3">
+              <KpiCards kpi={data.kpi} />
+              <SummaryCard name={data.name} kpi={data.kpi} snap={data.snap} />
+            </div>
 
-          <IncomeChart symbol={data.symbol} />
+            <IncomeChart symbol={data.symbol} />
+          </motion.div>
 
-          <p className="pb-2 text-center text-xs text-muted-foreground/30">
+          <p className="pb-2 text-center text-xs text-slate-300">
             AI 深度解讀 — 開發中
           </p>
-        </div>
+        </motion.div>
       )}
-    </>
+
+    </AnimatePresence>
   )
 }
 
