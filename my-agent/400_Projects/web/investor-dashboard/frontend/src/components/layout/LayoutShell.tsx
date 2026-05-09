@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Topbar } from "@/components/layout/Topbar"
 
@@ -13,21 +14,32 @@ const PAGE_BG: Record<string, string> = {
 const DEFAULT_BG = "#ffffff"
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
+  const pathname  = usePathname()
   const isOverview = pathname === "/"
   const bg = PAGE_BG[pathname] ?? DEFAULT_BG
+
+  // 捲過 Hero（約一個視窗高）才顯示 Topbar
+  const [pastHero, setPastHero] = useState(false)
+  useEffect(() => {
+    if (!isOverview) return
+    setPastHero(false)
+    const handler = () => setPastHero(window.scrollY > window.innerHeight * 0.8)
+    window.addEventListener("scroll", handler, { passive: true })
+    return () => window.removeEventListener("scroll", handler)
+  }, [isOverview])
+
+  const showTopbar = !isOverview || pastHero
 
   return (
     <div
       className="flex min-h-full flex-col"
       style={{ background: bg, transition: "background 600ms ease-in-out" }}
     >
-      {/* Topbar: always mounted, invisible on overview */}
       <div
         style={{
-          opacity: isOverview ? 0 : 1,
-          pointerEvents: isOverview ? "none" : "auto",
-          transition: "opacity 450ms ease-in-out",
+          opacity: showTopbar ? 1 : 0,
+          pointerEvents: showTopbar ? "auto" : "none",
+          transition: "opacity 400ms ease-in-out",
         }}
       >
         <Topbar />

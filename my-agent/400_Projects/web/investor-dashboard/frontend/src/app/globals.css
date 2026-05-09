@@ -184,6 +184,11 @@
   0%, 100% { background-color: rgb(139  92 246 / 0.20); }
   50%       { background-color: rgb(99  102 241 / 0.28); }
 }
+@keyframes ticker-ltr {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
 @keyframes color-orange {
   0%, 100% { background-color: rgb(251 146  60 / 0.15); }
   50%       { background-color: rgb(245 158  11 / 0.22); }
