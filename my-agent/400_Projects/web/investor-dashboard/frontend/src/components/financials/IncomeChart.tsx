@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   BarChart, Bar, AreaChart, Area, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
@@ -8,7 +9,7 @@ import {
 } from "recharts"
 import { cn } from "@/lib/utils"
 
-const API = "http://localhost:8002/api"
+const API = "http://localhost:8000/api"
 
 const AXIS_COLOR  = "#94a3b8"
 const GRID_COLOR  = "rgba(99,102,241,0.07)"
@@ -493,8 +494,10 @@ function PeHistoryCard({ data, loading, error, snap }: {
 
 /* ── 主組件 ──────────────────────────────────────── */
 export function IncomeChart({ symbol }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>("獲利能力")
-  const [periodIdx, setPeriodIdx] = useState(1)
+  const [activeTab, setActiveTab]       = useState<Tab>("獲利能力")
+  const [hoveredTab, setHoveredTab]     = useState<Tab | null>(null)
+  const [periodIdx, setPeriodIdx]       = useState(1)
+  const [hoveredPeriod, setHoveredPeriod] = useState<number | null>(null)
 
   const [data, setData]       = useState<DataPoint[]>([])
   const [loading, setLoading] = useState(false)
@@ -560,69 +563,100 @@ export function IncomeChart({ symbol }: Props) {
     <section>
       {/* Tab + Period selector */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex rounded-xl bg-slate-100/80 p-1 gap-0.5">
-          {TABS.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                "rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                activeTab === tab
-                  ? "bg-white text-[#1E1B4B] shadow-sm"
-                  : "text-slate-400 hover:text-slate-600"
-              )}
-            >
-              {tab}
-            </button>
-          ))}
+        <div
+          className="flex rounded-xl bg-slate-100/80 p-1 gap-0.5"
+          onMouseLeave={() => setHoveredTab(null)}
+        >
+          {TABS.map(tab => {
+            const showIndicator = (hoveredTab ?? activeTab) === tab
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                onMouseEnter={() => setHoveredTab(tab)}
+                className={cn(
+                  "relative rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors duration-150",
+                  showIndicator ? "text-[#1E1B4B]" : "text-slate-400 hover:text-slate-500"
+                )}
+              >
+                {showIndicator && (
+                  <motion.div
+                    layoutId="tab-indicator"
+                    className="absolute inset-0 rounded-lg bg-white shadow-sm"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <span className="relative z-10">{tab}</span>
+              </button>
+            )
+          })}
         </div>
 
         {(activeTab === "獲利能力" || activeTab === "現金 & 結構") && (
-          <div className="flex rounded-xl bg-slate-100/80 p-1 gap-0.5">
-            {PERIOD_OPTS.map((opt, i) => (
-              <button
-                key={opt.label}
-                onClick={() => setPeriodIdx(i)}
-                className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
-                  periodIdx === i
-                    ? "bg-white text-[#1E1B4B] shadow-sm"
-                    : "text-slate-400 hover:text-slate-600"
-                )}
-              >
-                {opt.label}
-              </button>
-            ))}
+          <div
+            className="flex rounded-xl bg-slate-100/80 p-1 gap-0.5"
+            onMouseLeave={() => setHoveredPeriod(null)}
+          >
+            {PERIOD_OPTS.map((opt, i) => {
+              const showIndicator = (hoveredPeriod ?? periodIdx) === i
+              return (
+                <button
+                  key={opt.label}
+                  onClick={() => setPeriodIdx(i)}
+                  onMouseEnter={() => setHoveredPeriod(i)}
+                  className={cn(
+                    "relative rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-150",
+                    showIndicator ? "text-[#1E1B4B]" : "text-slate-400 hover:text-slate-500"
+                  )}
+                >
+                  {showIndicator && (
+                    <motion.div
+                      layoutId="period-indicator"
+                      className="absolute inset-0 rounded-lg bg-white shadow-sm"
+                      transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                    />
+                  )}
+                  <span className="relative z-10">{opt.label}</span>
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
 
-      {/* 獲利能力 */}
-      {activeTab === "獲利能力" && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <RevenueCard data={data} loading={loading} error={error} />
-          <MarginCard  data={data} loading={loading} error={error} />
-        </div>
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.26, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          {activeTab === "獲利能力" && (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <RevenueCard data={data} loading={loading} error={error} />
+              <MarginCard  data={data} loading={loading} error={error} />
+            </div>
+          )}
 
-      {/* 財務健康 */}
-      {activeTab === "現金 & 結構" && (
-        <div>
-          {healthSnap && !healthError && <HealthKpiRow snap={healthSnap} />}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FcfCard         data={healthData} loading={healthLoading} error={healthError} />
-            <GrossMarginCard data={healthData} loading={healthLoading} error={healthError} />
-          </div>
-        </div>
-      )}
+          {activeTab === "現金 & 結構" && (
+            <div>
+              {healthSnap && !healthError && <HealthKpiRow snap={healthSnap} />}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FcfCard         data={healthData} loading={healthLoading} error={healthError} />
+                <GrossMarginCard data={healthData} loading={healthLoading} error={healthError} />
+              </div>
+            </div>
+          )}
 
-      {/* 估值 */}
-      {activeTab === "估值" && (
-        <div>
-          {valSnap && !valError && <ValuationKpiRow snap={valSnap} peAvg={peAvg} />}
-          <PeHistoryCard data={valData} loading={valLoading} error={valError} snap={valSnap} />
-        </div>
-      )}
+          {activeTab === "估值" && (
+            <div>
+              {valSnap && !valError && <ValuationKpiRow snap={valSnap} peAvg={peAvg} />}
+              <PeHistoryCard data={valData} loading={valLoading} error={valError} snap={valSnap} />
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </section>
   )
 }

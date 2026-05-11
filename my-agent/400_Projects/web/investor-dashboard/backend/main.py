@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 import models  # noqa: F401 — registers ORM models before create_all
-from routers import portfolio, financials, sentiment, calendar, watchlist, market
+from routers import portfolio, financials, sentiment, calendar, watchlist, market, ai
 
 Base.metadata.create_all(bind=engine)
 
@@ -26,3 +26,4 @@ app.include_router(sentiment.router, prefix="/api/sentiment")
 app.include_router(calendar.router, prefix="/api/calendar")
 app.include_router(watchlist.router, prefix="/api/watchlist")
 app.include_router(market.router, prefix="/api/market")
+app.include_router(ai.router, prefix="/api/ai")

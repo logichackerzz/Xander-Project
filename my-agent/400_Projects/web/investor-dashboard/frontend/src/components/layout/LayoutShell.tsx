@@ -49,7 +49,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       <main
         className="flex flex-1 flex-col overflow-auto"
         style={{
-          paddingTop: isOverview ? "0px" : "80px",
+          paddingTop: isOverview ? "0px" : "24px",
           transition: "padding-top 450ms ease-in-out",
         }}
       >

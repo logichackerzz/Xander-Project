@@ -127,6 +127,7 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
 }
 
@@ -152,24 +153,24 @@
 
 /* ── 首頁背景色球動畫 ── */
 @keyframes blob-float-1 {
-  0%, 100% { transform: translate(0px,   0px)  scale(1);    }
-  33%       { transform: translate(28px, -20px) scale(1.05); }
-  66%       { transform: translate(-18px, 16px) scale(0.96); }
+  0%, 100% { transform: translate3d(0px,   0px,  0) scale(1);    }
+  33%       { transform: translate3d(28px, -20px, 0) scale(1.05); }
+  66%       { transform: translate3d(-18px, 16px, 0) scale(0.96); }
 }
 @keyframes blob-float-2 {
-  0%, 100% { transform: translate(0px,   0px)  scale(1);    }
-  33%       { transform: translate(-24px, 18px) scale(1.07); }
-  66%       { transform: translate(20px, -14px) scale(0.95); }
+  0%, 100% { transform: translate3d(0px,   0px,  0) scale(1);    }
+  33%       { transform: translate3d(-24px, 18px, 0) scale(1.07); }
+  66%       { transform: translate3d(20px, -14px, 0) scale(0.95); }
 }
 @keyframes blob-float-3 {
-  0%, 100% { transform: translate(0px,   0px)  scale(1);    }
-  40%       { transform: translate(18px,  22px) scale(1.04); }
-  70%       { transform: translate(-24px, -10px) scale(0.97); }
+  0%, 100% { transform: translate3d(0px,   0px,   0) scale(1);    }
+  40%       { transform: translate3d(18px,  22px,  0) scale(1.04); }
+  70%       { transform: translate3d(-24px, -10px, 0) scale(0.97); }
 }
 @keyframes blob-float-4 {
-  0%, 100% { transform: translate(0px,   0px)  scale(1);    }
-  30%       { transform: translate(-20px, -16px) scale(1.06); }
-  65%       { transform: translate(22px,  18px) scale(0.94); }
+  0%, 100% { transform: translate3d(0px,   0px,  0) scale(1);    }
+  30%       { transform: translate3d(-20px, -16px, 0) scale(1.06); }
+  65%       { transform: translate3d(22px,  18px, 0) scale(0.94); }
 }
 
 @keyframes color-indigo {
@@ -185,8 +186,20 @@
   50%       { background-color: rgb(99  102 241 / 0.28); }
 }
 @keyframes ticker-ltr {
-  0%   { transform: translateX(-50%); }
-  100% { transform: translateX(0%); }
+  0%   { transform: translate3d(-50%, 0, 0); }
+  100% { transform: translate3d(0%, 0, 0); }
+}
+@keyframes ticker-rtl {
+  0%   { transform: translate3d(0%, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.cursor-blink {
+  animation: cursor-blink 0.65s step-end infinite;
+  font-weight: 300;
 }
 
 @keyframes color-orange {

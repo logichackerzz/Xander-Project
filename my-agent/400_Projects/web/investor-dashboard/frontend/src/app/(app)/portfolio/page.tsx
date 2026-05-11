@@ -6,7 +6,7 @@ import { Plus, Upload } from "lucide-react"
 import { AddHoldingDialog } from "@/components/portfolio/AddHoldingDialog"
 import { HoldingsTable } from "@/components/portfolio/HoldingsTable"
 
-const API = "http://localhost:8002/api"
+const API = "http://localhost:8000/api"
 
 export type Holding = {
   id: string

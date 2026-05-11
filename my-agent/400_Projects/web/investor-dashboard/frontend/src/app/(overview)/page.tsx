@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import {
   TrendingUp,
   TrendingDown,
@@ -15,19 +15,23 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+const SLOGAN = "財報是企業的語言 難讀 但不該難懂 — Folio 就是為此而生"
+
 const SPRING = { type: "spring", stiffness: 180, damping: 22 } as const
 
+const REVEAL = { duration: 0.7, ease: [0.16, 1, 0.3, 1] } as const
+
 const cardVariants = {
-  hidden: { opacity: 0, y: 28 },
-  show:   { opacity: 1, y: 0, transition: SPRING },
+  hidden: { opacity: 0, y: 56, scale: 0.95 },
+  show:   { opacity: 1, y: 0,  scale: 1,    transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] } },
 }
 
 const gridVariants = {
   hidden: {},
-  show:   { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+  show:   { transition: { staggerChildren: 0.1, delayChildren: 0.08 } },
 }
 
-const API = "http://localhost:8002/api"
+const API = "http://localhost:8000/api"
 
 let introShown = false
 
@@ -45,6 +49,12 @@ function fmtIndex(price: number | null, symbol: string) {
   if (price == null) return "—"
   const dec = symbol === "^TWII" ? 0 : 2
   return price.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec })
+}
+
+function fmtTickerPrice(price: number, yf: string): string {
+  if (price >= 1000) return price.toLocaleString("en-US", { maximumFractionDigits: 0 })
+  if (yf.endsWith(".TW")) return price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 1 })
+  return price.toFixed(2)
 }
 
 const CARD_BASE = "h-full rounded-2xl bg-white/60 backdrop-blur-sm border border-slate-200/60 px-5 py-4 flex flex-col justify-between shadow-[0_4px_20px_rgba(99,102,241,0.08)]"
@@ -97,26 +107,59 @@ const EVENT_COLOR: Record<string, string> = {
 const FEATURES = ["財報分析", "自選股追蹤", "市場行事曆", "情緒指標"]
 const BARS = [38, 55, 45, 72, 60, 85, 68, 90, 78]
 
-const TICKER_STOCKS = [
-  // 台股
-  { s: "2330",  n: "台積電",   c: +1.70 },
-  { s: "2454",  n: "聯發科",   c: -0.74 },
-  { s: "2317",  n: "鴻海",     c: +0.55 },
-  { s: "2881",  n: "富邦金",   c: +0.30 },
-  { s: "2882",  n: "國泰金",   c: -0.22 },
-  // 台股 ETF
-  { s: "0050",  n: "元大台50", c: +1.12 },
-  { s: "0056",  n: "高股息",   c: +0.48 },
-  // 美股
-  { s: "AAPL",  n: "Apple",   c: +1.24 },
-  { s: "NVDA",  n: "NVIDIA",  c: +3.21 },
-  { s: "TSLA",  n: "Tesla",   c: -0.83 },
-  { s: "MSFT",  n: "Microsoft", c: +0.52 },
-  { s: "META",  n: "Meta",    c: +2.17 },
-  // 美股 ETF
-  { s: "SPY",   n: "S&P 500", c: +0.45 },
-  { s: "QQQ",   n: "Nasdaq",  c: +0.78 },
-  { s: "VOO",   n: "Vanguard", c: +0.43 },
+const TICKER_US = [
+  { s: "AAPL",  n: "Apple",     c: +1.24, p: "207.32", yf: "AAPL"  },
+  { s: "NVDA",  n: "NVIDIA",    c: +3.21, p: "137.58", yf: "NVDA"  },
+  { s: "TSLA",  n: "Tesla",     c: -0.83, p: "227.15", yf: "TSLA"  },
+  { s: "MSFT",  n: "Microsoft", c: +0.52, p: "454.88", yf: "MSFT"  },
+  { s: "META",  n: "Meta",      c: +2.17, p: "608.44", yf: "META"  },
+  { s: "AMZN",  n: "Amazon",    c: +0.89, p: "203.71", yf: "AMZN"  },
+  { s: "GOOGL", n: "Google",    c: +1.05, p: "165.24", yf: "GOOGL" },
+  { s: "AMD",   n: "AMD",       c: -1.32, p: "107.63", yf: "AMD"   },
+  { s: "NFLX",  n: "Netflix",   c: +0.67, p: "1,142",  yf: "NFLX"  },
+  { s: "JPM",   n: "JPMorgan",  c: +0.43, p: "264.55", yf: "JPM"   },
+  { s: "GC=F",  n: "黃金",      c: +0.82, p: "3,317",  yf: "GC=F"  },
+  { s: "SI=F",  n: "白銀",      c: +1.15, p: "33.24",  yf: "SI=F"  },
+  { s: "CL=F",  n: "原油",      c: -0.67, p: "61.48",  yf: "CL=F"  },
+]
+
+const TICKER_TW = [
+  { s: "2330",  n: "台積電",    c: +1.70, p: "955",   yf: "2330.TW"  },
+  { s: "2454",  n: "聯發科",    c: -0.74, p: "1,155", yf: "2454.TW"  },
+  { s: "2317",  n: "鴻海",      c: +0.55, p: "155",   yf: "2317.TW"  },
+  { s: "2303",  n: "聯電",      c: -0.50, p: "48.2",  yf: "2303.TW"  },
+  { s: "2412",  n: "中華電",    c: +0.25, p: "129",   yf: "2412.TW"  },
+  { s: "3711",  n: "日月光",    c: +0.88, p: "148",   yf: "3711.TW"  },
+  { s: "2308",  n: "台達電",    c: -0.35, p: "402",   yf: "2308.TW"  },
+  { s: "2464",  n: "兆赫",      c: +0.62, p: "52.4",  yf: "2464.TW"  },
+  { s: "2344",  n: "華邦電",    c: -0.35, p: "28.5",  yf: "2344.TW"  },
+  { s: "6770",  n: "力積電",    c: +1.12, p: "34.8",  yf: "6770.TW"  },
+  { s: "2313",  n: "華通",      c: +0.44, p: "142",   yf: "2313.TW"  },
+  { s: "2408",  n: "南亞科",    c: -0.58, p: "52.3",  yf: "2408.TW"  },
+  { s: "2367",  n: "燿華",      c: +0.21, p: "47.2",  yf: "2367.TW"  },
+  { s: "5289",  n: "東捷",      c: -0.29, p: "35.1",  yf: "5289.TW"  },
+  { s: "3481",  n: "群創",      c: +0.35, p: "17.5",  yf: "3481.TW"  },
+]
+
+const TICKER_ETF = [
+  { s: "0050",   n: "元大台50",   c: +0.72, p: "97.0",  yf: "0050.TW"   },
+  { s: "0056",   n: "高股息",     c: +0.29, p: "44.85", yf: "0056.TW"   },
+  { s: "00878",  n: "國泰永續",   c: +0.25, p: "27.82", yf: "00878.TW"  },
+  { s: "00940",  n: "台灣價值",   c: +0.62, p: "15.08", yf: "00940.TW"  },
+  { s: "00919",  n: "精選高息",   c: +0.16, p: "25.47", yf: "00919.TW"  },
+  { s: "006208", n: "富邦台50",   c: +1.10, p: "224.3", yf: "006208.TW" },
+  { s: "00981A", n: "統一增長",   c: +2.27, p: "28.91", yf: "00981A.TW" },
+  { s: "0052",   n: "富邦科技",   c: +0.78, p: "57.10", yf: "0052.TW"   },
+  { s: "00937B", n: "群益ESG債",  c: +0.34, p: "14.77", yf: "00937B.TWO"},
+  { s: "00679B", n: "元大美債",   c: +0.37, p: "26.71", yf: "00679B.TWO"},
+  { s: "00751B", n: "元大公司債", c: +0.41, p: "31.53", yf: "00751B.TWO"},
+  { s: "00687B", n: "國泰美債",   c: +0.32, p: "27.78", yf: "00687B.TWO"},
+  { s: "SPY",    n: "S&P 500",   c: +0.45, p: "579",   yf: "SPY"       },
+  { s: "QQQ",    n: "Nasdaq",    c: +0.78, p: "491",   yf: "QQQ"       },
+  { s: "VOO",    n: "Vanguard",  c: +0.43, p: "534",   yf: "VOO"       },
+  { s: "IWM",    n: "Russell",   c: -0.21, p: "209",   yf: "IWM"       },
+  { s: "GLD",    n: "Gold",      c: +0.15, p: "309",   yf: "GLD"       },
+  { s: "TLT",    n: "Bond",      c: -0.38, p: "88.4",  yf: "TLT"       },
 ]
 
 const DEFAULT_WATCHLIST: WatchlistItem[] = [
@@ -128,14 +171,41 @@ const DEFAULT_WATCHLIST: WatchlistItem[] = [
 ]
 
 export default function DashboardPage() {
-  const [ready, setReady]     = useState(introShown)
+  const [ready, setReady]         = useState(introShown)
+  const [heroVisible, setHeroVisible] = useState(true)
+  const currentSection = useRef<"hero" | "dashboard" | "egg">("hero")
   const [indices, setIndices] = useState<IndexData[]>([])
   const [indicesLoading, setIndicesLoading] = useState(true)
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
   const [upcoming, setUpcoming]   = useState<UpcomingEvent[]>([])
   const [cpi, setCpi] = useState<{ yoy: number; mom: number; period: string; prev_yoy: number } | null>(null)
+  const [livePrices, setLivePrices] = useState<Map<string, { price: number | null; change_pct: number | null }>>(new Map())
+  const [eggInView, setEggInView] = useState(false)
 
   useEffect(() => {
+    const el = document.getElementById("easter-egg")
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([e]) => { setEggInView(e.isIntersecting) },
+      { threshold: 0.3 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  const [dashboardInView, setDashboardInView] = useState(false)
+
+  useEffect(() => {
+    const el = document.getElementById("dashboard")
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([e]) => { setDashboardInView(e.isIntersecting) },
+      { threshold: 0.15 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+useEffect(() => {
     if (!introShown) {
       const t = setTimeout(() => { setReady(true); introShown = true }, 1500)
       return () => clearTimeout(t)
@@ -146,6 +216,14 @@ export default function DashboardPage() {
     fetch(`${API}/market/indices`).then(r => r.ok ? r.json() : [])
       .then(d => setIndices(Array.isArray(d) ? d : [])).catch(() => {})
       .finally(() => setIndicesLoading(false))
+
+    const allSymbols = [...TICKER_US, ...TICKER_TW, ...TICKER_ETF].map(t => t.yf).join(",")
+    fetch(`${API}/market/prices?symbols=${encodeURIComponent(allSymbols)}`)
+      .then(r => r.ok ? r.json() : {})
+      .then((data: Record<string, { price: number | null; change_pct: number | null }>) => {
+        setLivePrices(new Map(Object.entries(data)))
+      })
+      .catch(() => {})
     fetch(`${API}/watchlist`).then(r => r.ok ? r.json() : [])
       .then(d => setWatchlist(Array.isArray(d) && d.length > 0 ? d : DEFAULT_WATCHLIST)).catch(() => {})
     fetch(`${API}/market/cpi`).then(r => r.ok ? r.json() : null)
@@ -153,6 +231,62 @@ export default function DashboardPage() {
     fetch(`${API}/calendar/upcoming?days=14`).then(r => r.ok ? r.json() : { events: [] })
       .then(d => setUpcoming(d.events ?? [])).catch(() => {})
   }, [])
+
+  const mainRef = useRef<HTMLElement | null>(null)
+  useEffect(() => { mainRef.current = document.querySelector("main") }, [])
+  const { scrollY } = useScroll({ container: mainRef as React.RefObject<HTMLElement> })
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
+
+  useEffect(() => {
+    if (!ready) return
+    const main = document.querySelector("main") as HTMLElement | null
+    if (!main) return
+
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY === 0) return
+      const scrollTop = main.scrollTop
+
+      if (e.deltaY > 0) {
+        // ↓ Section 1 → Section 2
+        if (scrollTop < 80) {
+          e.preventDefault()
+          currentSection.current = "dashboard"
+          setHeroVisible(false)
+          document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" })
+          return
+        }
+        // ↓ Section 2 → Section 3
+        const eggEl = document.getElementById("easter-egg")
+        if (eggEl && scrollTop > 200) {
+          const eggTop = eggEl.getBoundingClientRect().top
+          if (eggTop > 0 && eggTop < window.innerHeight * 1.5) {
+            e.preventDefault()
+            currentSection.current = "egg"
+            eggEl.scrollIntoView({ behavior: "smooth" })
+          }
+        }
+      } else {
+        // ↑ Section 3 → Section 2
+        if (currentSection.current === "egg") {
+          e.preventDefault()
+          currentSection.current = "dashboard"
+          document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" })
+          return
+        }
+        // ↑ Section 2 → Section 1
+        if (currentSection.current === "dashboard") {
+          e.preventDefault()
+          currentSection.current = "hero"
+          setHeroVisible(true)
+          main.scrollTo({ top: 0, behavior: "smooth" })
+          return
+        }
+      }
+    }
+
+    main.addEventListener("wheel", onWheel, { passive: false })
+    return () => main.removeEventListener("wheel", onWheel)
+  }, [ready])
 
   const nasdaq = indices.find(i => i.symbol === "^IXIC")
   const sp500  = indices.find(i => i.symbol === "^GSPC")
@@ -163,13 +297,13 @@ export default function DashboardPage() {
       {/* ── 背景色球 ── */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
         <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full blur-3xl"
-          style={{ animation: "blob-float-1 11s ease-in-out infinite, color-indigo 7s ease-in-out infinite" }} />
+          style={{ animation: "blob-float-1 11s ease-in-out infinite, color-indigo 7s ease-in-out infinite", willChange: "transform, background-color" }} />
         <div className="absolute top-1/3 -right-28 h-80 w-80 rounded-full blur-3xl"
-          style={{ animation: "blob-float-2 14s ease-in-out infinite, color-cyan 9s ease-in-out infinite" }} />
+          style={{ animation: "blob-float-2 14s ease-in-out infinite, color-cyan 9s ease-in-out infinite", willChange: "transform, background-color" }} />
         <div className="absolute bottom-16 left-1/4 h-72 w-72 rounded-full blur-3xl"
-          style={{ animation: "blob-float-3 12s ease-in-out infinite, color-violet 8s ease-in-out infinite" }} />
+          style={{ animation: "blob-float-3 12s ease-in-out infinite, color-violet 8s ease-in-out infinite", willChange: "transform, background-color" }} />
         <div className="absolute bottom-24 right-1/4 h-64 w-64 rounded-full blur-3xl"
-          style={{ animation: "blob-float-4 15s ease-in-out infinite, color-orange 11s ease-in-out infinite" }} />
+          style={{ animation: "blob-float-4 15s ease-in-out infinite, color-orange 11s ease-in-out infinite", willChange: "transform, background-color" }} />
       </div>
 
       {/* ══ Intro 動畫（Folio 縮小飛往左上角） ══ */}
@@ -185,8 +319,8 @@ export default function DashboardPage() {
               className="flex flex-col items-center gap-2"
               initial={{ opacity: 0, scale: 0.85, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.12, x: "-40vw", y: "-44vh",
-                transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] } }}
+              exit={{ opacity: 0, scale: 1.18,
+                transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } }}
               transition={{ duration: 0.55, ease: "easeOut" }}
             >
               <h1 className="text-9xl text-[#1E1B4B]"
@@ -206,45 +340,87 @@ export default function DashboardPage() {
           Section 1 — Hero（迎賓 + 風格展示）
       ══════════════════════════════════════ */}
       <section className="relative flex h-screen flex-col overflow-hidden">
+        {/* 切換至 Section 2 時整頁淡至同色，回來時還原 */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{ backgroundColor: "#F5F3FF", willChange: "opacity" }}
+          animate={{ opacity: heroVisible ? 0 : 1 }}
+          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        />
 
-        {/* ── Slogan：左上，D&L 同款位置 ── */}
+        {/* ── 標題區：英文大標 + 中文副標 ── */}
         <div className="w-full px-10 pt-[13vh]">
-          <motion.h1
-            className="font-extrabold leading-[1.0] tracking-tight text-[#1E1B4B] whitespace-nowrap"
-            style={{
-              fontFamily: "var(--font-urbanist)",
-              fontSize: "clamp(3.5rem, 8.5vw, 11rem)",
-            }}
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+          <h1
+            className="font-extrabold leading-[1.0] tracking-tight text-[#1E1B4B]"
+            style={{ fontFamily: "var(--font-urbanist)", fontSize: "clamp(3.5rem, 8.5vw, 11rem)" }}
           >
-            From noise to signal,<br />
-            from data to decision.
-          </motion.h1>
+            <motion.span
+              className="block pb-[0.15em]"
+              initial={{ clipPath: "inset(0 100% 0 0)" }}
+              animate={ready && heroVisible ? { clipPath: "inset(0 0% 0 0)" } : { clipPath: "inset(0 100% 0 0)" }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              style={{ willChange: "clip-path" }}
+            >
+              From noise to signal,
+            </motion.span>
+            <motion.span
+              className="block pb-[0.15em]"
+              initial={{ clipPath: "inset(0 100% 0 0)" }}
+              animate={ready && heroVisible ? { clipPath: "inset(0 0% 0 0)" } : { clipPath: "inset(0 100% 0 0)" }}
+              transition={{ duration: 0.9, delay: ready && heroVisible ? 0.14 : 0, ease: [0.16, 1, 0.3, 1] }}
+              style={{ willChange: "clip-path" }}
+            >
+              from data to decision.
+            </motion.span>
+          </h1>
+
+          <motion.p
+            className="mt-2 text-slate-400 font-normal pl-8"
+            style={{ fontFamily: "var(--font-urbanist)", fontSize: "clamp(0.82rem, 1.1vw, 1rem)" }}
+            initial={{ opacity: 0 }}
+            animate={ready && heroVisible ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.7, delay: ready && heroVisible ? 0.45 : 0, ease: "easeOut" }}
+          >
+            {SLOGAN}
+          </motion.p>
         </div>
 
         {/* ── 底部橫列：左介紹 + 右跑馬燈 ── */}
         <motion.div
           className="absolute bottom-0 left-0 right-0 px-10 pb-12 flex items-end justify-between gap-10"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.65 }}
+          initial={{ opacity: 0, y: 60 }}
+          animate={ready && heroVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
+          transition={{ duration: 0.85, delay: ready && heroVisible ? 0.3 : 0, ease: [0.16, 1, 0.3, 1] }}
         >
-          {/* 左：介紹 + CTA */}
+          {/* 左：CTA */}
           <div className="shrink-0">
-            <p className="text-base leading-relaxed text-slate-600 max-w-[260px]"
-              style={{ fontFamily: "var(--font-lora)" }}>
-              財報是企業對外說話的語言<br />
-              Folio 把它翻譯成你能行動的資訊
-            </p>
-            <Link
-              href="/financials"
-              className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#1E1B4B] px-5 py-2
-                text-sm font-semibold text-white/90 transition-all hover:bg-indigo-700"
+            <button
+              onClick={() => {
+                currentSection.current = "dashboard"
+                setHeroVisible(false)
+                document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" })
+              }}
+              className="group relative inline-flex items-center rounded-full overflow-hidden
+                bg-[#1E1B4B] border border-white/10 px-6 py-2.5
+                text-sm font-semibold cursor-pointer select-none
+                active:scale-95 transition-transform duration-75"
             >
-              開始使用 <ArrowUpRight className="size-3.5" />
-            </Link>
+              {/* 左至右色填 */}
+              <span
+                className="absolute inset-0 origin-left scale-x-0 bg-indigo-600
+                  transition-transform duration-[380ms] ease-[cubic-bezier(0.16,1,0.3,1)]
+                  group-hover:scale-x-100"
+              />
+              {/* 文字 + icon */}
+              <span className="relative z-10 flex items-center gap-2
+                text-white/75 transition-colors duration-150 group-hover:text-white">
+                探索 Folio
+                <span className="transition-transform duration-[220ms] ease-out
+                  group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                  <ArrowUpRight className="size-3.5" />
+                </span>
+              </span>
+            </button>
           </div>
 
           {/* 捲動提示 — 置中自然出現 */}
@@ -256,36 +432,53 @@ export default function DashboardPage() {
             <ChevronDown className="size-4 text-slate-300" />
           </motion.div>
 
-          {/* 右：橫向股票跑馬燈 */}
-          <div
-            className="shrink-0"
-            style={{
-              width: "400px",
-              overflow: "hidden",
-              maskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-            }}
-          >
-            <div
-              className="flex gap-3"
-              style={{ width: "max-content", animation: "ticker-ltr 30s linear infinite" }}
-            >
-              {[...TICKER_STOCKS, ...TICKER_STOCKS].map((stock, i) => (
+          {/* 右：三列交錯股票跑馬燈 */}
+          <div className="shrink-0 flex flex-col gap-1.5" style={{ width: "1120px" }}>
+            {([
+              { stocks: TICKER_US,  label: "美股", dir: "ltr", speed: "32s" },
+              { stocks: TICKER_TW,  label: "台股", dir: "rtl", speed: "28s" },
+              { stocks: TICKER_ETF, label: "ETF",  dir: "ltr", speed: "36s" },
+            ] as const).map(({ stocks, label, dir, speed }) => (
+              <div key={label} className="flex items-center">
                 <div
-                  key={i}
-                  className="w-[76px] h-[76px] shrink-0 rounded-2xl flex flex-col justify-between
-                    bg-white/65 backdrop-blur-sm border border-slate-200/50 px-3 py-3"
+                  style={{
+                    flex: 1,
+                    overflow: "hidden",
+                    maskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+                    WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+                  }}
                 >
-                  <p className="text-[9px] text-slate-400 leading-tight truncate">{stock.n}</p>
-                  <div>
-                    <p className="text-sm font-black text-[#1E1B4B] leading-none">{stock.s}</p>
-                    <p className={`text-[11px] font-semibold mt-0.5 tabular-nums ${stock.c >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                      {stock.c >= 0 ? "+" : ""}{stock.c}%
-                    </p>
+                  <div
+                    className="flex gap-2"
+                    style={{ width: "max-content", animation: `ticker-${dir} ${speed} linear infinite`, willChange: "transform" }}
+                  >
+                    {[...stocks, ...stocks].map((stock, i) => {
+                      const live = livePrices.get(stock.yf)
+                      const displayPrice  = live?.price      != null ? fmtTickerPrice(live.price, stock.yf) : stock.p
+                      const displayChange = live?.change_pct != null ? live.change_pct : stock.c
+                      return (
+                        <div
+                          key={i}
+                          className="w-[80px] h-[80px] shrink-0 rounded-xl flex flex-col justify-between
+                            bg-white/65 backdrop-blur-sm border border-slate-200/50 px-2.5 py-2.5"
+                        >
+                          <p className="text-[8px] text-slate-400 leading-tight truncate">{stock.n}</p>
+                          <div>
+                            <p className="text-[13px] font-black text-[#1E1B4B] leading-none tabular-nums">{displayPrice}</p>
+                            <div className="flex items-baseline justify-between mt-0.5">
+                              <p className="text-[9px] text-slate-500 leading-none truncate">{stock.s}</p>
+                              <p className={`text-[9px] font-semibold tabular-nums ${displayChange >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                                {displayChange >= 0 ? "+" : ""}{displayChange.toFixed(2)}%
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
 
         </motion.div>
@@ -295,37 +488,52 @@ export default function DashboardPage() {
       {/* ══════════════════════════════════════
           Section 2 — Dashboard 內容
       ══════════════════════════════════════ */}
-      <div className="relative pb-20">
-        <div className="w-full px-10 pt-28">
+      <div id="dashboard" className="relative pb-20">
+        <div className="w-full px-10 pt-12">
 
           {/* Section 2 Header */}
-          <motion.div
-            className="mb-6 flex items-baseline gap-3"
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ ...SPRING }}
-          >
+          <div className="mb-6 flex items-baseline gap-3">
             <h2
-              className="text-5xl leading-none text-[#1E1B4B]"
+              className="text-5xl leading-none text-[#1E1B4B] overflow-hidden"
               style={{ fontFamily: "var(--font-dancing-script)" }}
             >
-              Folio
+              <motion.span
+                className="block pb-[0.1em]"
+                initial={{ clipPath: "inset(0 100% 0 0)" }}
+                whileInView={{ clipPath: "inset(0 0% 0 0)" }}
+                viewport={{ once: false }}
+                transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+              >
+                Folio
+              </motion.span>
             </h2>
-            <span className="h-4 w-px self-center bg-slate-300 shrink-0" />
-            <p className="text-sm text-slate-400" style={{ fontFamily: "var(--font-dancing-script)" }}>
+            <motion.span
+              className="h-4 w-px self-center bg-slate-300 shrink-0"
+              initial={{ opacity: 0, scaleY: 0 }}
+              whileInView={{ opacity: 1, scaleY: 1 }}
+              viewport={{ once: false }}
+              transition={{ duration: 0.35, delay: 0.5, ease: "easeOut" }}
+            />
+            <motion.p
+              className="text-sm text-slate-400"
+              style={{ fontFamily: "var(--font-dancing-script)" }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: false }}
+              transition={{ duration: 0.5, delay: 0.55, ease: "easeOut" }}
+            >
               Markets, made readable.
-            </p>
-          </motion.div>
+            </motion.p>
+          </div>
 
           {/* 自選股 + 即將事件 快看列 */}
           {(watchlist.length > 0 || upcoming.length > 0) && (
             <motion.div
               className="mb-6 w-full overflow-x-auto no-scrollbar"
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.5 }}
-              transition={{ ...SPRING }}
+              viewport={{ once: false, amount: 0.5 }}
+              transition={{ ...REVEAL }}
             >
               <div className="flex items-center gap-2 pb-0.5">
                 {watchlist.map(item => {
@@ -374,8 +582,7 @@ export default function DashboardPage() {
             style={{ gridTemplateColumns: "repeat(5, 1fr)", gridTemplateRows: "220px 150px 120px" }}
             variants={gridVariants}
             initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.05 }}
+            animate={dashboardInView ? "show" : "hidden"}
           >
             {/* 財報分析 縮至 2×2 */}
             <motion.div className="col-span-2 row-span-2" variants={cardVariants}>
@@ -493,10 +700,10 @@ export default function DashboardPage() {
 
           {/* About */}
           <motion.section className="mt-8"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ ...SPRING }}>
+            initial={{ opacity: 0, y: 56, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}>
             <div className="rounded-3xl bg-white/70 border border-slate-200/60 shadow-sm px-8 py-7">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-indigo-400">About Folio</p>
               <p className="mt-3 text-sm leading-relaxed text-slate-500" style={{ fontFamily: "var(--font-lora)" }}>
@@ -521,8 +728,46 @@ export default function DashboardPage() {
             </div>
           </footer>
 
+
         </div>
       </div>
+
+      {/* ══ Section 3 — Easter Egg ══ */}
+      <section id="easter-egg" className="h-screen flex flex-col items-center justify-center bg-[#07070F]">
+        <motion.div
+          className="flex flex-col items-center gap-8 px-8 max-w-2xl"
+          initial="hidden"
+          animate={eggInView ? "show" : "hidden"}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.22, delayChildren: 0.1 } } }}
+        >
+          {[
+            ["財報是企業的語言 難讀 但不該難懂 —", "Folio", "就是為此而生"],
+            ["From noise to signal, from data to decision. —", "Folio", ""],
+            ["Markets, made readable. —", "Folio", ""],
+            ["投資最大的困境不是缺少數據，而是看不懂數據 —", "Folio", "替你解讀"],
+            ["讓你在每一個關鍵時刻都不措手不及 —", "Folio", ""],
+          ].map(([pre, keyword, post], i) => (
+            <motion.p
+              key={i}
+              className="text-center text-lg leading-relaxed"
+              style={{ fontFamily: "var(--font-urbanist)" }}
+              variants={{
+                hidden: { opacity: 0, y: 24 },
+                show:   { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] } },
+              }}
+            >
+              <span className="text-white/20">{pre} </span>
+              <motion.span
+                className="font-black text-indigo-400"
+                style={{ textShadow: "0 0 32px rgba(99,102,241,0.75)" }}
+                animate={eggInView ? { opacity: [1, 0.55, 1] } : {}}
+                transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut", delay: i * 0.2 }}
+              >{keyword}</motion.span>
+              {post && <span className="text-white/20"> {post}</span>}
+            </motion.p>
+          ))}
+        </motion.div>
+      </section>
     </>
   )
 }

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { LoaderCircle, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const API = "http://localhost:8002/api"
+const API = "http://localhost:8000/api"
 
 interface Result {
   symbol: string

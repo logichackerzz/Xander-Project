@@ -9,7 +9,7 @@ import { useToast } from "@/lib/toast"
 import { TrendingUp, TrendingDown, Trash2, Star, X, ArrowUpRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const API = "http://localhost:8002/api"
+const API = "http://localhost:8000/api"
 
 const MARKET_LABEL: Record<string, string> = { tw: "台股", us: "美股", crypto: "加密" }
 

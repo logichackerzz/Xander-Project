@@ -12,7 +12,7 @@ import { IncomeChart } from "@/components/financials/IncomeChart"
 import { SummaryCard } from "@/components/financials/SummaryCard"
 
 
-const API = "http://localhost:8002/api"
+const API = "http://localhost:8000/api"
 
 const QUICK_PICKS = [
   { symbol: "AAPL", label: "Apple" },
@@ -217,15 +217,12 @@ function FinancialsContent() {
 
             <div className="space-y-3">
               <KpiCards kpi={data.kpi} />
-              <SummaryCard name={data.name} kpi={data.kpi} snap={data.snap} />
+              <SummaryCard name={data.name} symbol={data.symbol} kpi={data.kpi} snap={data.snap} />
             </div>
 
             <IncomeChart symbol={data.symbol} />
           </motion.div>
 
-          <p className="pb-2 text-center text-xs text-slate-300">
-            AI 深度解讀 — 開發中
-          </p>
         </motion.div>
       )}
 

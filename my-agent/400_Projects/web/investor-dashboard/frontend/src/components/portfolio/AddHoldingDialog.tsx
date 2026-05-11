@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { useToast } from "@/lib/toast"
 import { StockSearchInput } from "./StockSearchInput"
 
-const API = "http://localhost:8002/api"
+const API = "http://localhost:8000/api"
 
 const MARKETS = [
   {

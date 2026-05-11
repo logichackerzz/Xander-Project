@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { CalendarView, CalEvent } from "@/components/calendar/CalendarView"
 
-const API = "http://localhost:8002/api"
+const API = "http://localhost:8000/api"
 
 export default function CalendarPage() {
   const now = new Date()

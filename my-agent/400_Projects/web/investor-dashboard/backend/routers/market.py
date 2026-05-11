@@ -189,3 +189,32 @@ def get_news(limit: int = 12):
 
     result.sort(key=lambda x: x["pub_date"], reverse=True)
     return {"news": result[:limit]}
+
+
+@router.get("/prices")
+def get_prices(symbols: str):
+    """Batch price fetch via yfinance (parallel). symbols = comma-separated yfinance symbols."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    syms = [s.strip() for s in symbols.split(",") if s.strip()]
+    if not syms:
+        return {}
+
+    def fetch_one(sym: str) -> tuple[str, dict]:
+        try:
+            fi = yf.Ticker(sym).fast_info
+            price = _safe(getattr(fi, "last_price", None)) or _safe(getattr(fi, "previous_close", None))
+            prev  = _safe(getattr(fi, "previous_close", None))
+            chg   = round((price - prev) / prev * 100, 2) if price and prev and prev > 0 else None
+            return sym, {"price": price, "change_pct": chg}
+        except Exception:
+            return sym, {"price": None, "change_pct": None}
+
+    result: dict[str, dict] = {}
+    with ThreadPoolExecutor(max_workers=10) as ex:
+        futures = {ex.submit(fetch_one, s): s for s in syms}
+        for future in as_completed(futures):
+            s, d = future.result()
+            result[s] = d
+
+    return result
