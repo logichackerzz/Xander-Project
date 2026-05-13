@@ -33,22 +33,27 @@ export default function CalendarPage() {
   }, [year])
 
   return (
-    <>
-      <div className="mx-auto w-full max-w-5xl px-6 py-8">
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {error}
-          </div>
-        )}
-        <CalendarView
-          events={events}
-          loading={loading}
-          year={year}
-          month={month}
-          onYearChange={setYear}
-          onMonthChange={setMonth}
-        />
+    <div className="mx-auto w-full max-w-5xl px-8 py-10 pb-16">
+      {/* Header */}
+      <div className="mb-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-amber-500">市場行事曆</p>
+        <h1 className="mt-1 text-4xl font-bold text-[#1E1B4B]">重要事件追蹤</h1>
       </div>
-    </>
+
+      {error && (
+        <div className="mb-6 rounded-2xl border border-red-400/30 bg-red-500/10 backdrop-blur-sm px-5 py-3 text-sm text-red-500">
+          {error}
+        </div>
+      )}
+
+      <CalendarView
+        events={events}
+        loading={loading}
+        year={year}
+        month={month}
+        onYearChange={setYear}
+        onMonthChange={setMonth}
+      />
+    </div>
   )
 }

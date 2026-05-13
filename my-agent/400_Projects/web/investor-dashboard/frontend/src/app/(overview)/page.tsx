@@ -35,6 +35,22 @@ const API = "http://localhost:8000/api"
 
 let introShown = false
 
+const CACHE_TTL = 20 * 60 * 1000 // 20 分鐘
+
+function readCache<T>(key: string): T | null {
+  try {
+    const raw = sessionStorage.getItem(key)
+    if (!raw) return null
+    const { data, ts } = JSON.parse(raw)
+    if (Date.now() - ts > CACHE_TTL) return null
+    return data as T
+  } catch { return null }
+}
+
+function writeCache(key: string, data: unknown) {
+  try { sessionStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })) } catch {}
+}
+
 interface IndexData {
   symbol: string; name: string; region: string
   price: number | null; change_pct: number | null
@@ -176,7 +192,7 @@ export default function DashboardPage() {
   const currentSection = useRef<"hero" | "dashboard" | "egg">("hero")
   const [indices, setIndices] = useState<IndexData[]>([])
   const [indicesLoading, setIndicesLoading] = useState(true)
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(DEFAULT_WATCHLIST)
   const [upcoming, setUpcoming]   = useState<UpcomingEvent[]>([])
   const [cpi, setCpi] = useState<{ yoy: number; mom: number; period: string; prev_yoy: number } | null>(null)
   const [livePrices, setLivePrices] = useState<Map<string, { price: number | null; change_pct: number | null }>>(new Map())
@@ -213,23 +229,40 @@ useEffect(() => {
   }, [])
 
   useEffect(() => {
+    // hydration 完成後才讀 sessionStorage，避免 server/client 不一致
+    const cachedUpcoming = readCache<UpcomingEvent[]>("folio_upcoming")
+    if (cachedUpcoming) setUpcoming(cachedUpcoming)
+
+    const cachedCpi = readCache<{ yoy: number; mom: number; period: string; prev_yoy: number }>("folio_cpi")
+    if (cachedCpi) setCpi(cachedCpi)
+
+    const cachedIndices = readCache<IndexData[]>("folio_indices")
+    if (cachedIndices) { setIndices(cachedIndices); setIndicesLoading(false) }
+
+    const cachedPrices = readCache<Record<string, { price: number | null; change_pct: number | null }>>("folio_prices")
+    if (cachedPrices) setLivePrices(new Map(Object.entries(cachedPrices)))
+
+    // 背景 fetch 刷新
     fetch(`${API}/market/indices`).then(r => r.ok ? r.json() : [])
-      .then(d => setIndices(Array.isArray(d) ? d : [])).catch(() => {})
-      .finally(() => setIndicesLoading(false))
+      .then(d => { const v = Array.isArray(d) ? d : []; setIndices(v); writeCache("folio_indices", v) })
+      .catch(() => {}).finally(() => setIndicesLoading(false))
 
     const allSymbols = [...TICKER_US, ...TICKER_TW, ...TICKER_ETF].map(t => t.yf).join(",")
     fetch(`${API}/market/prices?symbols=${encodeURIComponent(allSymbols)}`)
       .then(r => r.ok ? r.json() : {})
       .then((data: Record<string, { price: number | null; change_pct: number | null }>) => {
         setLivePrices(new Map(Object.entries(data)))
-      })
-      .catch(() => {})
+        writeCache("folio_prices", data)
+      }).catch(() => {})
+
     fetch(`${API}/watchlist`).then(r => r.ok ? r.json() : [])
       .then(d => setWatchlist(Array.isArray(d) && d.length > 0 ? d : DEFAULT_WATCHLIST)).catch(() => {})
+
     fetch(`${API}/market/cpi`).then(r => r.ok ? r.json() : null)
-      .then(d => d && setCpi(d)).catch(() => {})
+      .then(d => { if (d) { setCpi(d); writeCache("folio_cpi", d) } }).catch(() => {})
+
     fetch(`${API}/calendar/upcoming?days=14`).then(r => r.ok ? r.json() : { events: [] })
-      .then(d => setUpcoming(d.events ?? [])).catch(() => {})
+      .then(d => { const ev = d.events ?? []; setUpcoming(ev); writeCache("folio_upcoming", ev) }).catch(() => {})
   }, [])
 
   const mainRef = useRef<HTMLElement | null>(null)
@@ -294,25 +327,13 @@ useEffect(() => {
 
   return (
     <>
-      {/* ── 背景色球 ── */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
-        <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full blur-3xl"
-          style={{ animation: "blob-float-1 11s ease-in-out infinite, color-indigo 7s ease-in-out infinite", willChange: "transform, background-color" }} />
-        <div className="absolute top-1/3 -right-28 h-80 w-80 rounded-full blur-3xl"
-          style={{ animation: "blob-float-2 14s ease-in-out infinite, color-cyan 9s ease-in-out infinite", willChange: "transform, background-color" }} />
-        <div className="absolute bottom-16 left-1/4 h-72 w-72 rounded-full blur-3xl"
-          style={{ animation: "blob-float-3 12s ease-in-out infinite, color-violet 8s ease-in-out infinite", willChange: "transform, background-color" }} />
-        <div className="absolute bottom-24 right-1/4 h-64 w-64 rounded-full blur-3xl"
-          style={{ animation: "blob-float-4 15s ease-in-out infinite, color-orange 11s ease-in-out infinite", willChange: "transform, background-color" }} />
-      </div>
-
       {/* ══ Intro 動畫（Folio 縮小飛往左上角） ══ */}
       <AnimatePresence>
         {!ready && (
           <motion.div
             key="intro"
             className="fixed inset-0 z-[200] flex items-center justify-center"
-            style={{ background: "linear-gradient(to bottom, #F5F3FF, #EEF2FF)" }}
+            style={{ background: "#F4F3FF" }}
             exit={{ opacity: 0, transition: { duration: 0.6, ease: "easeInOut" } }}
           >
             <motion.div
@@ -340,13 +361,6 @@ useEffect(() => {
           Section 1 — Hero（迎賓 + 風格展示）
       ══════════════════════════════════════ */}
       <section className="relative flex h-screen flex-col overflow-hidden">
-        {/* 切換至 Section 2 時整頁淡至同色，回來時還原 */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{ backgroundColor: "#F5F3FF", willChange: "opacity" }}
-          animate={{ opacity: heroVisible ? 0 : 1 }}
-          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-        />
 
         {/* ── 標題區：英文大標 + 中文副標 ── */}
         <div className="w-full px-10 pt-[13vh]">
@@ -358,7 +372,7 @@ useEffect(() => {
               className="block pb-[0.15em]"
               initial={{ clipPath: "inset(0 100% 0 0)" }}
               animate={ready && heroVisible ? { clipPath: "inset(0 0% 0 0)" } : { clipPath: "inset(0 100% 0 0)" }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: heroVisible ? 0.9 : 0.22, ease: [0.16, 1, 0.3, 1] }}
               style={{ willChange: "clip-path" }}
             >
               From noise to signal,
@@ -367,7 +381,7 @@ useEffect(() => {
               className="block pb-[0.15em]"
               initial={{ clipPath: "inset(0 100% 0 0)" }}
               animate={ready && heroVisible ? { clipPath: "inset(0 0% 0 0)" } : { clipPath: "inset(0 100% 0 0)" }}
-              transition={{ duration: 0.9, delay: ready && heroVisible ? 0.14 : 0, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: heroVisible ? 0.9 : 0.22, delay: ready && heroVisible ? 0.14 : 0, ease: [0.16, 1, 0.3, 1] }}
               style={{ willChange: "clip-path" }}
             >
               from data to decision.
@@ -379,7 +393,7 @@ useEffect(() => {
             style={{ fontFamily: "var(--font-urbanist)", fontSize: "clamp(0.82rem, 1.1vw, 1rem)" }}
             initial={{ opacity: 0 }}
             animate={ready && heroVisible ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.7, delay: ready && heroVisible ? 0.45 : 0, ease: "easeOut" }}
+            transition={{ duration: heroVisible ? 0.7 : 0.15, delay: ready && heroVisible ? 0.45 : 0, ease: "easeOut" }}
           >
             {SLOGAN}
           </motion.p>
@@ -390,7 +404,7 @@ useEffect(() => {
           className="absolute bottom-0 left-0 right-0 px-10 pb-12 flex items-end justify-between gap-10"
           initial={{ opacity: 0, y: 60 }}
           animate={ready && heroVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
-          transition={{ duration: 0.85, delay: ready && heroVisible ? 0.3 : 0, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: heroVisible ? 0.85 : 0.15, delay: ready && heroVisible ? 0.3 : 0, ease: [0.16, 1, 0.3, 1] }}
         >
           {/* 左：CTA */}
           <div className="shrink-0">
@@ -526,16 +540,10 @@ useEffect(() => {
             </motion.p>
           </div>
 
-          {/* 自選股 + 即將事件 快看列 */}
-          {(watchlist.length > 0 || upcoming.length > 0) && (
-            <motion.div
-              className="mb-6 w-full overflow-x-auto no-scrollbar"
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.5 }}
-              transition={{ ...REVEAL }}
-            >
-              <div className="flex items-center gap-2 pb-0.5">
+          {/* 自選股 + 即將事件 快看列（容器固定佔位，避免資料載入時版面跳動） */}
+          <div className="mb-6 min-h-[44px] w-full overflow-x-auto no-scrollbar">
+            {(watchlist.length > 0 || upcoming.length > 0) && (
+            <div className="flex items-center gap-2 pb-0.5">
                 {watchlist.map(item => {
                   const up = (item.change_pct ?? 0) >= 0
                   return (
@@ -545,36 +553,57 @@ useEffect(() => {
                         px-3.5 py-2 hover:bg-white/75 transition-all
                         shadow-[0_2px_8px_rgba(99,102,241,0.07)]">
                       <span className="text-xs font-bold text-slate-700">{item.symbol}</span>
-                      {item.change_pct != null
-                        ? <span className={cn("text-xs font-semibold tabular-nums",
-                            up ? "text-emerald-600" : "text-red-500")}>
-                            {up ? "+" : ""}{item.change_pct.toFixed(2)}%
-                          </span>
-                        : <span className="text-xs text-slate-400">—</span>}
-                    </Link>
-                  )
-                })}
-                {watchlist.length > 0 && upcoming.length > 0 &&
-                  <div className="h-4 w-px bg-slate-300/70 shrink-0 mx-0.5" />}
-                {upcoming.slice(0, 5).map(ev => {
-                  const days = daysUntil(ev.date)
-                  return (
-                    <Link key={ev.date + ev.title} href="/calendar"
-                      className="flex-shrink-0 flex items-center gap-2 rounded-xl
-                        bg-white/55 backdrop-blur-sm border border-slate-200/55
-                        px-3.5 py-2 hover:bg-white/75 transition-all
-                        shadow-[0_2px_8px_rgba(99,102,241,0.06)]">
-                      <span className={cn("size-1.5 rounded-full shrink-0", EVENT_COLOR[ev.type] ?? "bg-slate-400")} />
-                      <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">{ev.title}</span>
-                      <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
-                        {days <= 0 ? "今天" : `${days}d`}
+                      <span className={cn(
+                        "text-xs font-semibold tabular-nums w-[54px] text-right shrink-0",
+                        item.change_pct != null
+                          ? (up ? "text-emerald-600" : "text-red-500")
+                          : "text-slate-400"
+                      )}>
+                        {item.change_pct != null
+                          ? `${up ? "+" : ""}${item.change_pct.toFixed(2)}%`
+                          : "—"}
                       </span>
                     </Link>
                   )
                 })}
-              </div>
-            </motion.div>
-          )}
+                <AnimatePresence>
+                  {watchlist.length > 0 && upcoming.length > 0 && (
+                    <motion.div
+                      key="divider"
+                      className="h-4 w-px bg-slate-300/70 shrink-0 mx-0.5"
+                      initial={{ opacity: 0, scaleY: 0 }}
+                      animate={{ opacity: 1, scaleY: 1 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    />
+                  )}
+                </AnimatePresence>
+                {upcoming.slice(0, 5).map((ev, i) => {
+                  const days = daysUntil(ev.date)
+                  return (
+                    <motion.div
+                      key={ev.date + ev.title}
+                      className="flex-shrink-0 overflow-hidden"
+                      initial={{ maxWidth: 0, opacity: 0 }}
+                      animate={{ maxWidth: 300, opacity: 1 }}
+                      transition={{ duration: 0.32, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <Link href="/calendar"
+                        className="flex items-center gap-2 rounded-xl whitespace-nowrap
+                          bg-white/55 backdrop-blur-sm border border-slate-200/55
+                          px-3.5 py-2 hover:bg-white/75 transition-all
+                          shadow-[0_2px_8px_rgba(99,102,241,0.06)]">
+                        <span className={cn("size-1.5 rounded-full shrink-0", EVENT_COLOR[ev.type] ?? "bg-slate-400")} />
+                        <span className="text-xs font-semibold text-slate-700">{ev.title}</span>
+                        <span className="text-[10px] font-medium text-slate-400">
+                          {days <= 0 ? "今天" : `${days}d`}
+                        </span>
+                      </Link>
+                    </motion.div>
+                  )
+                })}
+            </div>
+            )}
+          </div>
 
           {/* Bento Grid */}
           <motion.div

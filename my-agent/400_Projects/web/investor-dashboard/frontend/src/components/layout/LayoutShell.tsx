@@ -1,41 +1,35 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Topbar } from "@/components/layout/Topbar"
 
-const PAGE_BG: Record<string, string> = {
-  "/":           "linear-gradient(to bottom, #F5F3FF, #EEF2FF)",
-  "/watchlist":  "linear-gradient(to bottom, #E8E3FF, #DDE3FF)",
-  "/financials": "linear-gradient(to bottom, #E8E3FF, #DDE3FF)",
-}
-
-const DEFAULT_BG = "#ffffff"
-
 export function LayoutShell({ children }: { children: React.ReactNode }) {
-  const pathname  = usePathname()
+  const pathname   = usePathname()
   const isOverview = pathname === "/"
-  const bg = PAGE_BG[pathname] ?? DEFAULT_BG
+  const [mainEl, setMainEl] = useState<HTMLElement | null>(null)
 
-  // 捲過 Hero（約一個視窗高）才顯示 Topbar
-  const [pastHero, setPastHero] = useState(false)
-  useEffect(() => {
-    if (!isOverview) return
-    setPastHero(false)
-    const handler = () => setPastHero(window.scrollY > window.innerHeight * 0.8)
-    window.addEventListener("scroll", handler, { passive: true })
-    return () => window.removeEventListener("scroll", handler)
-  }, [isOverview])
-
-  const showTopbar = !isOverview || pastHero
+  const showTopbar = !isOverview
 
   return (
-    <div
-      className="flex min-h-full flex-col"
-      style={{ background: bg, transition: "background 600ms ease-in-out" }}
-    >
+    <div className="relative flex min-h-full flex-col bg-[#F4F3FF]">
+
+      {/* ── Aurora blobs（fixed，不設 overflow-hidden 讓 blur 正常擴散） ── */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute -top-40 -left-40 h-[640px] w-[640px] rounded-full blur-3xl"
+          style={{ animation: "blob-float-1 11s ease-in-out infinite, color-indigo 7s ease-in-out infinite", willChange: "transform, background-color" }} />
+        <div className="absolute -top-24 -right-48 h-[580px] w-[580px] rounded-full blur-3xl"
+          style={{ animation: "blob-float-2 14s ease-in-out infinite, color-cyan 9s ease-in-out infinite", willChange: "transform, background-color" }} />
+        <div className="absolute bottom-0 -left-24 h-[540px] w-[540px] rounded-full blur-3xl"
+          style={{ animation: "blob-float-3 12s ease-in-out infinite, color-violet 8s ease-in-out infinite", willChange: "transform, background-color" }} />
+        <div className="absolute bottom-16 right-1/4 h-[560px] w-[560px] rounded-full blur-3xl"
+          style={{ animation: "blob-float-4 15s ease-in-out infinite, color-orange 11s ease-in-out infinite", willChange: "transform, background-color" }} />
+      </div>
+
+      {/* Topbar — z-50，確保在 main（z-10）上方 */}
       <div
+        className="relative z-50"
         style={{
           opacity: showTopbar ? 1 : 0,
           pointerEvents: showTopbar ? "auto" : "none",
@@ -45,9 +39,10 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
         <Topbar />
       </div>
 
-      {/* Main: padding-top 0 on overview, 80px on app pages */}
+      {/* Main — z-10，直接 flex-1，不加額外 wrapper */}
       <main
-        className="flex flex-1 flex-col overflow-auto"
+        ref={setMainEl}
+        className="relative z-10 flex flex-1 flex-col overflow-auto"
         style={{
           paddingTop: isOverview ? "0px" : "24px",
           transition: "padding-top 450ms ease-in-out",
