@@ -72,6 +72,11 @@ def get_overview(symbol: str):
         week52_low  = _safe(info.get("fiftyTwoWeekLow"))
         sector      = info.get("sector") or info.get("industryDisp") or None
 
+        volume     = _safe(info.get("volume") or info.get("regularMarketVolume"))
+        avg_volume = _safe(info.get("averageVolume") or info.get("averageVolume10days"))
+        vol_ratio  = round(volume / avg_volume, 2) if volume and avg_volume else None
+        beta       = _safe(info.get("beta"))
+
         return {
             "symbol": symbol.upper(),
             "name": info.get("longName") or info.get("shortName", symbol.upper()),
@@ -82,6 +87,10 @@ def get_overview(symbol: str):
             "week52_high": week52_high,
             "week52_low":  week52_low,
             "sector":      sector,
+            "volume":      volume,
+            "avg_volume":  avg_volume,
+            "vol_ratio":   vol_ratio,
+            "beta":        beta,
             "kpi": {
                 "revenue_b": _b(latest_revenue),
                 "revenue_yoy_pct": revenue_yoy_pct,

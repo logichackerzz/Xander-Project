@@ -19,12 +19,12 @@ const navItems = [
     dot: "bg-indigo-500",    text: "text-indigo-900",
   },
   {
-    label: "市場情緒",   href: "/sentiment",  expandW: 124,
+    label: "總經&情緒",   href: "/sentiment",  expandW: 130,
     bg: "bg-emerald-500/18", border: "border-emerald-300/40",
     dot: "bg-emerald-500",   text: "text-emerald-900",
   },
   {
-    label: "市場行事曆", href: "/calendar",   expandW: 148,
+    label: "總經情報站", href: "/calendar",   expandW: 136,
     bg: "bg-amber-500/18",   border: "border-amber-300/40",
     dot: "bg-amber-500",     text: "text-amber-900",
   },

@@ -10,8 +10,8 @@ const navItems = [
   { label: "持倉管理", href: "/portfolio", icon: Star },
   { label: "追蹤清單", href: "/watchlist", icon: Star },
   { label: "財報分析", href: "/financials", icon: FileBarChart2 },
-  { label: "市場情緒", href: "/sentiment", icon: Gauge },
-  { label: "市場行事曆", href: "/calendar", icon: CalendarDays },
+  { label: "總經&情緒", href: "/sentiment", icon: Gauge },
+  { label: "總經情報站", href: "/calendar", icon: CalendarDays },
 ]
 
 export function Sidebar() {

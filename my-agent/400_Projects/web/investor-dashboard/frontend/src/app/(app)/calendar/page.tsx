@@ -36,7 +36,7 @@ export default function CalendarPage() {
     <div className="mx-auto w-full max-w-5xl px-8 py-10 pb-16">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-amber-500">市場行事曆</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-amber-500">總經情報站</p>
         <h1 className="mt-1 text-4xl font-bold text-[#1E1B4B]">重要事件追蹤</h1>
       </div>
 

@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { Dialog } from "@base-ui/react/dialog"
 import { StockSearchInput } from "@/components/portfolio/StockSearchInput"
 import { useToast } from "@/lib/toast"
-import { TrendingUp, TrendingDown, Trash2, Star, X, ArrowUpRight } from "lucide-react"
+import { TrendingUp, TrendingDown, Trash2, Star, X, FileBarChart2, LineChart } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const API = "http://localhost:8000/api"
@@ -31,6 +31,15 @@ type WatchlistItem = {
   market: string
   price: number | null
   change_pct: number | null
+  recommendation: string | null
+}
+
+const REC_STYLE: Record<string, string> = {
+  "強力買入": "bg-emerald-50 text-emerald-600 border-emerald-200/60",
+  "買入":     "bg-emerald-50/60 text-emerald-500 border-emerald-200/40",
+  "持有":     "bg-amber-50 text-amber-600 border-amber-200/60",
+  "賣出":     "bg-red-50/60 text-red-400 border-red-200/40",
+  "強力賣出": "bg-red-50 text-red-500 border-red-200/60",
 }
 
 type SearchMarket = "us" | "tw"
@@ -191,53 +200,76 @@ export default function WatchlistPage() {
                   <motion.div
                     key={item.symbol}
                     variants={cardVariants}
-                    onClick={() => router.push(`/financials?ticker=${item.symbol}`)}
-                    className={cn(
-                      CARD,
-                      "group cursor-pointer p-5 transition-all duration-200",
-                      "hover:bg-white/90 hover:shadow-[0_8px_32px_rgba(99,102,241,0.18)] hover:scale-[1.02]"
-                    )}
+                    className={cn(CARD, "overflow-hidden transition-all duration-200 hover:shadow-[0_8px_32px_rgba(99,102,241,0.18)]")}
                   >
-                    <div className="mb-4 flex items-center justify-between">
-                      <span className="rounded-full border border-indigo-200/60 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-semibold tracking-widest text-indigo-500 uppercase">
-                        {MARKET_LABEL[item.market] ?? item.market}
-                      </span>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(item) }}
-                        className="cursor-pointer rounded-lg p-1 text-slate-300 transition-colors duration-200 hover:bg-red-50 hover:text-red-400"
-                        title="移除"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    </div>
+                    {/* 卡片主內容 */}
+                    <div className="p-5">
+                      <div className="mb-4 flex items-center justify-between">
+                        <span className="rounded-full border border-indigo-200/60 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-semibold tracking-widest text-indigo-500 uppercase">
+                          {MARKET_LABEL[item.market] ?? item.market}
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(item) }}
+                          className="cursor-pointer rounded-lg p-1 text-slate-300 transition-colors duration-200 hover:bg-red-50 hover:text-red-400"
+                          title="移除"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
 
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-                      {item.symbol}
-                    </p>
-                    <p className="mt-0.5 truncate text-base font-semibold text-[#1E1B4B]">
-                      {item.name}
-                    </p>
-
-                    <div className="mt-4 flex items-end justify-between">
-                      <p className="text-2xl font-bold tabular-nums text-[#1E1B4B]">
-                        {fmtPrice(item.price)}
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                        {item.symbol}
                       </p>
-                      {item.change_pct !== null ? (
-                        <div className={cn(
-                          "flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold",
-                          up ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
-                        )}>
-                          {up ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
-                          <span>{up ? "+" : ""}{item.change_pct.toFixed(2)}%</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-300">—</span>
-                      )}
+                      <div className="mt-0.5 flex items-center gap-2">
+                        <p className="truncate text-base font-semibold text-[#1E1B4B]">{item.name}</p>
+                        {item.recommendation && (
+                          <span className={cn(
+                            "shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                            REC_STYLE[item.recommendation] ?? "bg-slate-50 text-slate-400 border-slate-200/60"
+                          )}>
+                            {item.recommendation}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-4 flex items-end justify-between">
+                        <p className="text-2xl font-bold tabular-nums text-[#1E1B4B]">
+                          {fmtPrice(item.price)}
+                        </p>
+                        {item.change_pct !== null ? (
+                          <div className={cn(
+                            "flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold",
+                            up ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
+                          )}>
+                            {up ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
+                            <span>{up ? "+" : ""}{item.change_pct.toFixed(2)}%</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-300">—</span>
+                        )}
+                      </div>
+
                     </div>
 
-                    <div className="mt-3 flex items-center gap-1 text-xs text-transparent transition-colors duration-200 group-hover:text-indigo-400">
-                      <span>查看財報</span>
-                      <ArrowUpRight className="size-3" />
+                    {/* 分割底部按鈕 */}
+                    <div className="flex border-t border-slate-100/60">
+                      <button
+                        onClick={() => router.push(`/financials?ticker=${item.symbol}`)}
+                        className="flex flex-1 items-center justify-center gap-1.5 py-3 text-xs font-semibold
+                          text-slate-400 transition-colors hover:bg-indigo-50/70 hover:text-indigo-500"
+                      >
+                        <FileBarChart2 className="size-3.5" />
+                        財報分析
+                      </button>
+                      <div className="w-px bg-slate-100/60" />
+                      <button
+                        onClick={() => router.push(`/chart?ticker=${item.symbol}`)}
+                        className="flex flex-1 items-center justify-center gap-1.5 py-3 text-xs font-semibold
+                          text-slate-400 transition-colors hover:bg-teal-50/70 hover:text-teal-500"
+                      >
+                        <LineChart className="size-3.5" />
+                        K 線盤
+                      </button>
                     </div>
                   </motion.div>
                 )

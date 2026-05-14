@@ -425,7 +425,7 @@ function buildMacroCards(data: Record<string, any>, load: Record<string, boolean
 
 // ── Main Page ──────────────────────────────────────────────────────────────
 export default function SentimentPage() {
-  const [activeTab, setActiveTab]   = useState<TabId>("us")
+  const [activeTab, setActiveTab]   = useState<TabId>("macro")
   const [hoveredTab, setHoveredTab] = useState<TabId | null>(null)
   const [usData, setUsData] = useState<Record<string, any>>({})
   const [twData, setTwData] = useState<Record<string, any>>({})
@@ -513,7 +513,7 @@ export default function SentimentPage() {
                 exit={{    opacity: 0, y: -10 }}
                 transition={{ duration: 0.22, ease: EASE }}
               >
-                市場情緒
+                總經&amp;情緒
               </motion.p>
             )}
           </AnimatePresence>

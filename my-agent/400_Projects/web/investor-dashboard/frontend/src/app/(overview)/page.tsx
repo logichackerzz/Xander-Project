@@ -120,7 +120,7 @@ const EVENT_COLOR: Record<string, string> = {
   fomc: "bg-red-500", macro: "bg-indigo-500", earnings: "bg-amber-500",
 }
 
-const FEATURES = ["財報分析", "自選股追蹤", "市場行事曆", "情緒指標"]
+const FEATURES = ["財報分析", "自選股追蹤", "總經情報站", "情緒指標"]
 const BARS = [38, 55, 45, 72, 60, 85, 68, 90, 78]
 
 const TICKER_US = [
@@ -701,7 +701,7 @@ useEffect(() => {
                   transition-all duration-300 hover:scale-[1.015] hover:bg-amber-500/25">
                 <CalendarDays className="size-8 text-amber-600 shrink-0" />
                 <div>
-                  <h3 className="text-xl font-black text-amber-900">市場行事曆</h3>
+                  <h3 className="text-xl font-black text-amber-900">總經情報站</h3>
                   <p className="text-amber-700 text-sm mt-0.5 leading-snug">提前佈局重要事件，不再措手不及。</p>
                 </div>
               </Link>
@@ -716,7 +716,7 @@ useEffect(() => {
                   transition-all duration-300 hover:scale-[1.02] hover:bg-emerald-500/25 hover:shadow-[0_20px_50px_rgba(16,185,129,0.30)]">
                 <Activity className="size-9 text-emerald-600 shrink-0" />
                 <div>
-                  <h3 className="text-lg font-black text-emerald-900">市場情緒</h3>
+                  <h3 className="text-lg font-black text-emerald-900">總經&amp;情緒</h3>
                   <p className="text-emerald-700 text-sm mt-0.5 leading-snug">感受市場溫度，掌握進出場時機。</p>
                 </div>
               </Link>
@@ -741,7 +741,7 @@ useEffect(() => {
                 我們把密密麻麻的財務數字轉化為直覺圖表，讓你不需要財務背景，
                 也能讀懂一間公司的真實樣貌。
                 整合了<span className="font-medium text-slate-700">自選股追蹤</span>、
-                <span className="font-medium text-slate-700">市場行事曆</span>與
+                <span className="font-medium text-slate-700">總經情報站</span>與
                 <span className="font-medium text-slate-700">情緒指標</span>，
                 Folio 讓你在每一個關鍵時刻都不措手不及。
               </p>

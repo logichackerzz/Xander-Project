@@ -30,11 +30,27 @@ def get_watchlist(db: Session = Depends(get_db)):
     items = db.query(WatchlistItem).all()
     result = []
     for item in items:
+        REC_MAP = {
+            "strong_buy": "強力買入", "strongbuy": "強力買入", "buy": "買入",
+            "hold": "持有", "sell": "賣出",
+            "strong_sell": "強力賣出", "strongsell": "強力賣出",
+        }
+        recommendation = None
         try:
             info = yf.Ticker(item.symbol).info
             price = _safe(info.get("regularMarketPrice") or info.get("currentPrice"))
             prev = _safe(info.get("regularMarketPreviousClose") or info.get("previousClose"))
             change_pct = round((price - prev) / prev * 100, 2) if price and prev else None
+            rec_key = (info.get("recommendationKey") or "").lower()
+            if not rec_key:
+                rec_mean = _safe(info.get("recommendationMean"))
+                if rec_mean is not None:
+                    if rec_mean <= 1.5:   rec_key = "strongbuy"
+                    elif rec_mean <= 2.5: rec_key = "buy"
+                    elif rec_mean <= 3.5: rec_key = "hold"
+                    elif rec_mean <= 4.5: rec_key = "sell"
+                    else:                 rec_key = "strongsell"
+            recommendation = REC_MAP.get(rec_key, None)
         except Exception:
             price = None
             change_pct = None
@@ -44,6 +60,7 @@ def get_watchlist(db: Session = Depends(get_db)):
             "market": item.market,
             "price": price,
             "change_pct": change_pct,
+            "recommendation": recommendation,
         })
     return result
 
