@@ -1,4 +1,5 @@
 import uuid
+import asyncio
 import httpx
 import yfinance as yf
 from fastapi import APIRouter, HTTPException, Depends
@@ -93,6 +94,60 @@ _TW_POPULAR = {
 }
 
 
+def _is_clean_us_symbol(sym: str, quote_type: str) -> bool:
+    """排除期貨、選擇權、指數、加密貨幣等垃圾代碼"""
+    bad_types = {"CRYPTOCURRENCY", "CURRENCY", "FUTURE", "INDEX", "MUTUALFUND"}
+    if quote_type in bad_types:
+        return False
+    if any(c in sym for c in (".", "-", "=", "^", "/")):
+        return False
+    if len(sym) > 6:   # 選擇權合約如 AAPL240119C00190000
+        return False
+    if sym.isdigit():  # 純數字不是美股
+        return False
+    return True
+
+
+async def _search_tw(q: str, limit: int) -> list[dict]:
+    await _load_tw_cache()
+    q_upper = q.upper()
+    matches = []
+    for code, name in _tw_cache.items():
+        code_match = code.startswith(q_upper)
+        name_match = q in name
+        if not code_match and not name_match:
+            continue
+        score = 100 if code in _TW_POPULAR else 0
+        if code_match:         score += 50
+        if name.startswith(q): score += 30
+        elif name_match:       score += 10
+        matches.append({"symbol": code, "name": name, "score": score, "market": "tw"})
+    matches.sort(key=lambda x: (-x["score"], x["symbol"]))
+    return matches[:limit]
+
+
+async def _search_us(q: str, limit: int) -> list[dict]:
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.get(
+                f"https://query2.finance.yahoo.com/v1/finance/search?q={q}&lang=en-US&type=equity&count={limit * 2}",
+                headers={"User-Agent": "Mozilla/5.0"},
+            )
+            quotes = r.json().get("quotes", [])
+            results = []
+            for quote in quotes:
+                sym  = quote.get("symbol", "")
+                name = quote.get("longname") or quote.get("shortname") or ""
+                qtype = quote.get("quoteType", "")
+                if sym and name and _is_clean_us_symbol(sym, qtype):
+                    results.append({"symbol": sym, "name": name, "market": "us"})
+                if len(results) >= limit:
+                    break
+            return results
+    except Exception:
+        return []
+
+
 @router.get("/search")
 async def search_symbols(q: str, market: str, limit: int = 8):
     q = q.strip()
@@ -100,48 +155,19 @@ async def search_symbols(q: str, market: str, limit: int = 8):
         return []
 
     if market == "tw":
-        await _load_tw_cache()
-        q_upper = q.upper()
-        matches = []
-        for code, name in _tw_cache.items():
-            code_match = code.startswith(q_upper)
-            name_match = q in name
-            if not code_match and not name_match:
-                continue
-            score = 100 if code in _TW_POPULAR else 0
-            if code_match:
-                score += 50
-            if name.startswith(q):
-                score += 30
-            elif name_match:
-                score += 10
-            matches.append({"symbol": code, "name": name, "score": score})
-        matches.sort(key=lambda x: (-x["score"], x["symbol"]))
-        return [{"symbol": m["symbol"], "name": m["name"]} for m in matches[:limit]]
+        matches = await _search_tw(q, limit)
+        return [{"symbol": m["symbol"], "name": m["name"]} for m in matches]
 
     if market == "us":
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                r = await client.get(
-                    f"https://query2.finance.yahoo.com/v1/finance/search?q={q}&lang=en-US&type=equity&count={limit}",
-                    headers={"User-Agent": "Mozilla/5.0"},
-                )
-                quotes = r.json().get("quotes", [])
-                results = []
-                for quote in quotes:
-                    sym = quote.get("symbol", "")
-                    name = quote.get("longname") or quote.get("shortname") or ""
-                    quote_type = quote.get("quoteType", "")
-                    if (sym and name
-                            and "." not in sym
-                            and "-" not in sym
-                            and quote_type not in ("CRYPTOCURRENCY", "CURRENCY")):
-                        results.append({"symbol": sym, "name": name})
-                    if len(results) >= limit:
-                        break
-                return results
-        except Exception:
-            return []
+        return await _search_us(q, limit)
+
+    if market == "both":
+        # 自動偵測優先市場：純數字或含中文 → 台股優先
+        is_tw_query = q.strip().isdigit() or any('一' <= c <= '鿿' for c in q)
+        tw_res, us_res = await asyncio.gather(_search_tw(q, 4), _search_us(q, 4))
+        combined = (tw_res + us_res) if is_tw_query else (us_res + tw_res)
+        return [{"symbol": m["symbol"], "name": m["name"], "market": m.get("market", "us")}
+                for m in combined[:limit]]
 
     return []
 

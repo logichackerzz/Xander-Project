@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { CalendarView, CalEvent } from "@/components/calendar/CalendarView"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 
 export default function CalendarPage() {
   const now = new Date()

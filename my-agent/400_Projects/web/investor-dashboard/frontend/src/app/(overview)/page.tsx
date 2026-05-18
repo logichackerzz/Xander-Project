@@ -15,8 +15,9 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { readCache as readApiCache, writeCache as writeApiCache } from "@/lib/dataCache"
+import { API_BASE } from "@/lib/api"
 
-const PREFETCH_BASE = "http://localhost:8000/api"
+const PREFETCH_BASE = API_BASE
 
 const PREFETCH_PATHS = [
   "/sentiment/us/sp500", "/sentiment/us/nasdaq", "/sentiment/us/dow",
@@ -53,7 +54,7 @@ const gridVariants = {
   show:   { transition: { staggerChildren: 0.1, delayChildren: 0.08 } },
 }
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 
 let introShown = false
 

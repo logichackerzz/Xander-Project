@@ -3,8 +3,9 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Sparkles, ChevronDown, ChevronUp } from "lucide-react"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 
 interface Snap {
   pe_trailing: number | null

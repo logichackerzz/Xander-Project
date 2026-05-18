@@ -8,8 +8,9 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import { cn } from "@/lib/utils"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 
 const AXIS_COLOR  = "#94a3b8"
 const GRID_COLOR  = "rgba(99,102,241,0.07)"
@@ -50,7 +51,7 @@ interface PePoint {
   pe: number | null
 }
 
-interface Props { symbol: string }
+interface Props { symbol: string; currency?: string }
 
 const TABS = ["獲利能力", "現金 & 結構", "估值"] as const
 type Tab = typeof TABS[number]
@@ -62,7 +63,7 @@ const PERIOD_OPTS: { label: string; period: Period; count: number }[] = [
 ]
 
 /* ── Tooltip 共用 ─────────────────────────────────── */
-function ChartTooltip({ active, payload, label, unit }: any) {
+function ChartTooltip({ active, payload, label, unit, prefix = "$" }: any) {
   if (!active || !payload?.length) return null
   const v = payload[0]?.value
   return (
@@ -73,18 +74,18 @@ function ChartTooltip({ active, payload, label, unit }: any) {
     }}>
       <p style={{ color: "#94a3b8", fontSize: 11, marginBottom: 4 }}>{label}</p>
       <p style={{ color: payload[0]?.color ?? "#1E1B4B", fontSize: 13, fontWeight: 600 }}>
-        {v != null ? `${unit === "%" ? "" : "$"}${v}${unit}` : "—"}
+        {v != null ? `${unit === "%" ? "" : prefix}${v}${unit}` : "—"}
       </p>
     </div>
   )
 }
 
 /* ── 營收 Bar Card ────────────────────────────────── */
-function RevenueCard({ data, loading, error }: { data: DataPoint[]; loading: boolean; error: boolean }) {
+function RevenueCard({ data, loading, error, cSym = "$" }: { data: DataPoint[]; loading: boolean; error: boolean; cSym?: string }) {
   const last  = data[data.length - 1]
   const prev4 = data[data.length - 5]
 
-  const headline = last?.revenue != null ? `$${last.revenue}B` : "—"
+  const headline = last?.revenue != null ? `${cSym}${last.revenue}B` : "—"
   const yoy = last?.revenue && prev4?.revenue
     ? ((last.revenue / prev4.revenue - 1) * 100)
     : null
@@ -116,8 +117,8 @@ function RevenueCard({ data, loading, error }: { data: DataPoint[]; loading: boo
             <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
               <CartesianGrid vertical={false} stroke={GRID_COLOR} />
               <XAxis dataKey="period" tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}B`} width={50} />
-              <Tooltip content={<ChartTooltip unit="B" />} cursor={{ fill: CURSOR_FILL }} />
+              <YAxis tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false} tickFormatter={v => `${cSym}${v}B`} width={50} />
+              <Tooltip content={<ChartTooltip unit="B" prefix={cSym} />} cursor={{ fill: CURSOR_FILL }} />
               <Bar dataKey="revenue" name="營收" fill="#3b82f6" radius={[5, 5, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -188,16 +189,16 @@ function MarginCard({ data, loading, error }: { data: DataPoint[]; loading: bool
 }
 
 /* ── 財務健康 KPI 小卡行 ─────────────────────────── */
-function fmtFcf(b: number | null) {
+function fmtFcf(b: number | null, cSym = "$") {
   if (b === null) return "—"
   const abs = Math.abs(b)
-  const prefix = b < 0 ? "-" : ""
-  if (abs >= 1000) return `${prefix}$${(abs / 1000).toFixed(1)}T`
-  if (abs >= 1)    return `${prefix}$${abs.toFixed(1)}B`
-  return `${prefix}$${(abs * 1000).toFixed(0)}M`
+  const neg = b < 0 ? "-" : ""
+  if (abs >= 1000) return `${neg}${cSym}${(abs / 1000).toFixed(1)}T`
+  if (abs >= 1)    return `${neg}${cSym}${abs.toFixed(1)}B`
+  return `${neg}${cSym}${(abs * 1000).toFixed(0)}M`
 }
 
-function HealthKpiRow({ snap }: { snap: HealthSnap }) {
+function HealthKpiRow({ snap, cSym = "$" }: { snap: HealthSnap; cSym?: string }) {
   const de = snap.debt_to_equity
   const deStr = de !== null ? de.toFixed(2) : "—"
   const deLabel = de === null ? "無資料" : de > 2 ? "槓桿偏高" : de < 1 ? "財務穩健" : "尚可"
@@ -211,7 +212,7 @@ function HealthKpiRow({ snap }: { snap: HealthSnap }) {
           "mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]",
           snap.fcf_b !== null && snap.fcf_b < 0 ? "text-red-500" : "text-[#1E1B4B]"
         )}>
-          {fmtFcf(snap.fcf_b)}
+          {fmtFcf(snap.fcf_b, cSym)}
         </p>
         <p className="mt-1 text-xs text-slate-400">最新季 FCF</p>
       </div>
@@ -236,10 +237,10 @@ function HealthKpiRow({ snap }: { snap: HealthSnap }) {
 }
 
 /* ── FCF Bar Card ─────────────────────────────────── */
-function FcfCard({ data, loading, error }: { data: HealthPoint[]; loading: boolean; error: boolean }) {
+function FcfCard({ data, loading, error, cSym = "$" }: { data: HealthPoint[]; loading: boolean; error: boolean; cSym?: string }) {
   const last = data[data.length - 1]
   const prev = data[data.length - 2]
-  const headline = fmtFcf(last?.fcf ?? null)
+  const headline = fmtFcf(last?.fcf ?? null, cSym)
   const diff = last?.fcf != null && prev?.fcf != null ? last.fcf - prev.fcf : null
 
   return (
@@ -248,8 +249,8 @@ function FcfCard({ data, loading, error }: { data: HealthPoint[]; loading: boole
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400">自由現金流 (FCF)</p>
           <p className={cn(
-            "mt-1.5 text-3xl font-semibold tabular-nums tracking-tight text-[#1E1B4B]",
-            last?.fcf != null && last.fcf < 0 ? "text-red-500" : ""
+            "mt-1.5 text-3xl font-semibold tabular-nums tracking-tight",
+            last?.fcf != null && last.fcf < 0 ? "text-red-500" : "text-[#1E1B4B]"
           )}>
             {headline}
           </p>
@@ -274,8 +275,8 @@ function FcfCard({ data, loading, error }: { data: HealthPoint[]; loading: boole
             <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
               <CartesianGrid vertical={false} stroke={GRID_COLOR} />
               <XAxis dataKey="period" tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}B`} width={50} />
-              <Tooltip content={<ChartTooltip unit="B" />} cursor={{ fill: CURSOR_FILL }} />
+              <YAxis tick={{ fontSize: 10, fill: AXIS_COLOR }} axisLine={false} tickLine={false} tickFormatter={v => `${cSym}${v}B`} width={50} />
+              <Tooltip content={<ChartTooltip unit="B" prefix={cSym} />} cursor={{ fill: CURSOR_FILL }} />
               <Bar dataKey="fcf" name="FCF" radius={[5, 5, 0, 0]}>
                 {data.map((d, i) => (
                   <Cell key={i} fill={d.fcf !== null && d.fcf < 0 ? "#ef4444" : "#3b82f6"} />
@@ -493,7 +494,8 @@ function PeHistoryCard({ data, loading, error, snap }: {
 }
 
 /* ── 主組件 ──────────────────────────────────────── */
-export function IncomeChart({ symbol }: Props) {
+export function IncomeChart({ symbol, currency }: Props) {
+  const cSym = (currency ?? (symbol.toUpperCase().includes(".TW") ? "TWD" : "USD")) === "TWD" ? "NT$" : "$"
   const [activeTab, setActiveTab]       = useState<Tab>("獲利能力")
   const [hoveredTab, setHoveredTab]     = useState<Tab | null>(null)
   const [periodIdx, setPeriodIdx]       = useState(1)
@@ -634,16 +636,16 @@ export function IncomeChart({ symbol }: Props) {
         >
           {activeTab === "獲利能力" && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <RevenueCard data={data} loading={loading} error={error} />
+              <RevenueCard data={data} loading={loading} error={error} cSym={cSym} />
               <MarginCard  data={data} loading={loading} error={error} />
             </div>
           )}
 
           {activeTab === "現金 & 結構" && (
             <div>
-              {healthSnap && !healthError && <HealthKpiRow snap={healthSnap} />}
+              {healthSnap && !healthError && <HealthKpiRow snap={healthSnap} cSym={cSym} />}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FcfCard         data={healthData} loading={healthLoading} error={healthError} />
+                <FcfCard         data={healthData} loading={healthLoading} error={healthError} cSym={cSym} />
                 <GrossMarginCard data={healthData} loading={healthLoading} error={healthError} />
               </div>
             </div>

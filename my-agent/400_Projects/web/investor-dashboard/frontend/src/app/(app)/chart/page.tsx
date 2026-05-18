@@ -10,8 +10,9 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from "recharts"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 
 declare global {
   interface Window { TradingView: any }

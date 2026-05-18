@@ -5,8 +5,9 @@ import { Dialog } from "@base-ui/react/dialog"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/lib/toast"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 const CURRENCY: Record<string, string> = { tw: "TWD", us: "USD", crypto: "USD" }
 
 function fmt(n: number, d = 2) {

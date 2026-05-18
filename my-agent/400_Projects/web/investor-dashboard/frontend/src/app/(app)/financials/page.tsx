@@ -10,21 +10,24 @@ import { CompanyCard } from "@/components/financials/CompanyCard"
 import { KpiCards } from "@/components/financials/KpiCards"
 import { IncomeChart } from "@/components/financials/IncomeChart"
 import { SummaryCard } from "@/components/financials/SummaryCard"
+import { API_BASE } from "@/lib/api"
 
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 
 const QUICK_PICKS = [
-  { symbol: "AAPL", label: "Apple" },
-  { symbol: "NVDA", label: "NVIDIA" },
-  { symbol: "MSFT", label: "Microsoft" },
-  { symbol: "TSLA", label: "Tesla" },
-  { symbol: "AMZN", label: "Amazon" },
+  { symbol: "AAPL",    label: "Apple" },
+  { symbol: "NVDA",    label: "NVIDIA" },
+  { symbol: "MSFT",    label: "Microsoft" },
+  { symbol: "2330.TW", label: "台積電" },
+  { symbol: "2317.TW", label: "鴻海" },
+  { symbol: "2454.TW", label: "聯發科" },
 ]
 
 interface OverviewData {
   symbol: string
   name: string
+  quote_type: string
   price: number
   change_pct: number
   currency: string
@@ -215,12 +218,21 @@ function FinancialsContent() {
               onToggleWatchlist={handleToggleWatchlist}
             />
 
+            {data.quote_type === "ETF" && (
+              <div className="flex items-center gap-2.5 rounded-xl border border-amber-200/60 bg-amber-50/60 px-4 py-2.5">
+                <span className="text-sm">📊</span>
+                <p className="text-xs text-amber-700">
+                  此標的為 <span className="font-semibold">ETF</span>，不具備個股財報數據（營收、淨利、P/E 等），以下指標可能顯示為空。
+                </p>
+              </div>
+            )}
+
             <div className="space-y-3">
-              <KpiCards kpi={data.kpi} />
+              <KpiCards kpi={data.kpi} currency={data.currency} />
               <SummaryCard name={data.name} symbol={data.symbol} kpi={data.kpi} snap={data.snap} />
             </div>
 
-            <IncomeChart symbol={data.symbol} />
+            <IncomeChart symbol={data.symbol} currency={data.currency} />
           </motion.div>
 
         </motion.div>

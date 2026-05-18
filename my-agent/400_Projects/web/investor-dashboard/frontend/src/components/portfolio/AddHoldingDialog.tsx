@@ -6,8 +6,9 @@ import { X, LoaderCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/lib/toast"
 import { StockSearchInput } from "./StockSearchInput"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 
 const MARKETS = [
   {

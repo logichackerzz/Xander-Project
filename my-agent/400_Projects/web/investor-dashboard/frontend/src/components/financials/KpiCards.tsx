@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { API_BASE } from "@/lib/api"
 
 interface Kpi {
   revenue_b: number | null
@@ -9,6 +10,7 @@ interface Kpi {
 
 interface Props {
   kpi: Kpi
+  currency?: string
 }
 
 function KpiCard({
@@ -33,11 +35,11 @@ function KpiCard({
   )
 }
 
-function fmtRevenue(b: number | null) {
+function fmtRevenue(b: number | null, cSym = "$") {
   if (b === null) return "—"
-  if (b >= 1000) return `$${(b / 1000).toFixed(1)} T`
-  if (b >= 1) return `$${b.toFixed(1)} B`
-  return `$${(b * 1000).toFixed(0)} M`
+  if (b >= 1000) return `${cSym}${(b / 1000).toFixed(1)} T`
+  if (b >= 1) return `${cSym}${b.toFixed(1)} B`
+  return `${cSym}${(b * 1000).toFixed(0)} M`
 }
 
 function roeLabel(roe: number | null): { text: string; color: string } {
@@ -49,7 +51,8 @@ function roeLabel(roe: number | null): { text: string; color: string } {
   return              { text: "優秀",  color: "text-emerald-600" }
 }
 
-export function KpiCards({ kpi }: Props) {
+export function KpiCards({ kpi, currency }: Props) {
+  const cSym = currency === "TWD" ? "NT$" : "$"
   const yoyUp = kpi.revenue_yoy_pct !== null ? kpi.revenue_yoy_pct >= 0 : undefined
   const { text: roeText, color: roeColor } = roeLabel(kpi.roe_pct)
 
@@ -57,7 +60,7 @@ export function KpiCards({ kpi }: Props) {
     <section className="grid grid-cols-3 gap-4">
       <KpiCard
         label="最新季營收"
-        value={fmtRevenue(kpi.revenue_b)}
+        value={fmtRevenue(kpi.revenue_b, cSym)}
         sub={
           kpi.revenue_yoy_pct !== null
             ? `${kpi.revenue_yoy_pct >= 0 ? "▲" : "▼"} ${Math.abs(kpi.revenue_yoy_pct).toFixed(1)}% 年增率`

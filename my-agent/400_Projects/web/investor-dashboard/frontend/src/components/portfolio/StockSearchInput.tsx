@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react"
 import { LoaderCircle, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 
 interface Result {
   symbol: string
@@ -18,9 +19,10 @@ interface Props {
   disabled?: boolean
   onChange: (raw: string) => void
   onSelect: (symbol: string, name: string) => void
+  onSubmit?: (query: string) => void
 }
 
-export function StockSearchInput({ market, value, placeholder, disabled, onChange, onSelect }: Props) {
+export function StockSearchInput({ market, value, placeholder, disabled, onChange, onSelect, onSubmit }: Props) {
   const [query, setQuery] = useState(value)
   const [results, setResults] = useState<Result[]>([])
   const [loading, setLoading] = useState(false)
@@ -90,9 +92,14 @@ export function StockSearchInput({ market, value, placeholder, disabled, onChang
     } else if (e.key === "ArrowUp") {
       e.preventDefault()
       setActiveIdx(i => Math.max(i - 1, -1))
-    } else if (e.key === "Enter" && activeIdx >= 0) {
+    } else if (e.key === "Enter") {
       e.preventDefault()
-      select(results[activeIdx])
+      if (activeIdx >= 0) {
+        select(results[activeIdx])
+      } else if (query.trim()) {
+        setOpen(false)
+        onSubmit?.(query.trim())
+      }
     } else if (e.key === "Escape") {
       setOpen(false)
     }
@@ -119,12 +126,24 @@ export function StockSearchInput({ market, value, placeholder, disabled, onChang
           "transition-colors duration-200"
         )}
       />
-      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
+      <button
+        type="button"
+        disabled={disabled || loading}
+        onClick={() => {
+          if (activeIdx >= 0 && results[activeIdx]) {
+            select(results[activeIdx])
+          } else if (query.trim()) {
+            setOpen(false)
+            onSubmit?.(query.trim())
+          }
+        }}
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 transition-colors hover:bg-indigo-50 disabled:pointer-events-none"
+      >
         {loading
           ? <LoaderCircle className="size-3.5 animate-spin text-indigo-400" />
-          : <Search className="size-3.5 text-indigo-300" />
+          : <Search className="size-3.5 text-indigo-400 hover:text-indigo-600" />
         }
-      </span>
+      </button>
 
       {open && results.length > 0 && (
         <ul className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-[0_8px_32px_rgba(99,102,241,0.18)]">

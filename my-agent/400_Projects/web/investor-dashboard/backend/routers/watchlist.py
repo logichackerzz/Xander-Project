@@ -37,7 +37,10 @@ def get_watchlist(db: Session = Depends(get_db)):
         }
         recommendation = None
         try:
-            info = yf.Ticker(item.symbol).info
+            yf_sym = item.symbol
+            if item.market == "tw" and not yf_sym.upper().endswith((".TW", ".TWO")):
+                yf_sym = yf_sym + ".TW"
+            info = yf.Ticker(yf_sym).info
             price = _safe(info.get("regularMarketPrice") or info.get("currentPrice"))
             prev = _safe(info.get("regularMarketPreviousClose") or info.get("previousClose"))
             change_pct = round((price - prev) / prev * 100, 2) if price and prev else None

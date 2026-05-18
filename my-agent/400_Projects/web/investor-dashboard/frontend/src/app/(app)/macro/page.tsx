@@ -4,9 +4,10 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { readCache, writeCache } from "@/lib/dataCache"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api/macro"
-const FULL_API = "http://localhost:8000/api"
+const API = `${API_BASE}/macro`
+const FULL_API = API_BASE
 type Tone = "green" | "red" | "amber" | "neutral"
 
 const TONE_BADGE: Record<Tone, string> = {

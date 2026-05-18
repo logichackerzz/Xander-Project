@@ -2,6 +2,37 @@ from fastapi import APIRouter, HTTPException
 import yfinance as yf
 import pandas as pd
 import math
+import requests as _req
+import time as _time
+from datetime import datetime, timedelta
+
+_INST_CACHE: dict = {}
+_TWSE_HEADERS = {"User-Agent": "Mozilla/5.0"}
+
+def _last_trading_dates_fin(n=5):
+    dates, d = [], datetime.today()
+    while len(dates) < n:
+        if d.weekday() < 5:
+            dates.append(d.strftime("%Y%m%d"))
+        d -= timedelta(days=1)
+    return dates
+
+def _is_tw(symbol: str) -> bool:
+    s = symbol.upper()
+    if s.endswith(".TW") or s.endswith(".TWO"):
+        return True
+    code = s.replace(".TW", "").replace(".TWO", "")
+    return code.isdigit() and len(code) in (4, 5, 6)
+
+def _tw_code(symbol: str) -> str:
+    return symbol.upper().replace(".TW", "").replace(".TWO", "")
+
+def _to_yf_symbol(symbol: str) -> str:
+    """補齊 yfinance 用的 .TW suffix（純數字台股代碼）"""
+    s = symbol.upper()
+    if _is_tw(s) and not s.endswith(".TW") and not s.endswith(".TWO"):
+        return s + ".TW"
+    return s
 
 router = APIRouter(tags=["financials"])
 
@@ -24,7 +55,7 @@ def _b(val):
 @router.get("/{symbol}/overview")
 def get_overview(symbol: str):
     try:
-        ticker = yf.Ticker(symbol.upper())
+        ticker = yf.Ticker(_to_yf_symbol(symbol))
         info = ticker.info
 
         price = _safe(info.get("regularMarketPrice") or info.get("currentPrice"))
@@ -77,9 +108,22 @@ def get_overview(symbol: str):
         vol_ratio  = round(volume / avg_volume, 2) if volume and avg_volume else None
         beta       = _safe(info.get("beta"))
 
+        rsi_val = None
+        try:
+            hist = ticker.history(period="3mo")
+            if len(hist) >= 15:
+                delta = hist["Close"].diff()
+                gain  = delta.where(delta > 0, 0.0).rolling(14).mean()
+                loss  = (-delta.where(delta < 0, 0.0)).rolling(14).mean()
+                rs    = gain / loss
+                rsi_val = round(float((100 - 100 / (1 + rs)).iloc[-1]), 1)
+        except Exception:
+            pass
+
         return {
             "symbol": symbol.upper(),
             "name": info.get("longName") or info.get("shortName", symbol.upper()),
+            "quote_type": info.get("quoteType", "EQUITY"),
             "price": price,
             "change_pct": change_pct,
             "currency": info.get("currency", "USD"),
@@ -91,6 +135,7 @@ def get_overview(symbol: str):
             "avg_volume":  avg_volume,
             "vol_ratio":   vol_ratio,
             "beta":        beta,
+            "rsi":         rsi_val,
             "kpi": {
                 "revenue_b": _b(latest_revenue),
                 "revenue_yoy_pct": revenue_yoy_pct,
@@ -110,10 +155,44 @@ def get_overview(symbol: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/{symbol}/price-history")
+def get_price_history(symbol: str, period: str = "1y"):
+    try:
+        allowed = {"1mo", "3mo", "6mo", "1y", "2y", "5y"}
+        if period not in allowed:
+            period = "1y"
+        ticker = yf.Ticker(_to_yf_symbol(symbol))
+        hist = ticker.history(period=period, interval="1d")
+        if hist is None or hist.empty:
+            raise HTTPException(status_code=404, detail="無歷史資料")
+        result = []
+        for ts, row in hist.iterrows():
+            o = _safe(row.get("Open"))
+            h = _safe(row.get("High"))
+            l = _safe(row.get("Low"))
+            c = _safe(row.get("Close"))
+            v = _safe(row.get("Volume"))
+            if c is None:
+                continue
+            result.append({
+                "date":   ts.strftime("%Y-%m-%d"),
+                "open":   round(o, 2) if o else c,
+                "high":   round(h, 2) if h else c,
+                "low":    round(l, 2) if l else c,
+                "close":  round(c, 2),
+                "volume": int(v) if v else 0,
+            })
+        return {"symbol": symbol.upper(), "period": period, "data": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{symbol}/income-statement")
 def get_income_statement(symbol: str, period: str = "quarterly", count: int = 8):
     try:
-        ticker = yf.Ticker(symbol.upper())
+        ticker = yf.Ticker(_to_yf_symbol(symbol))
         df = ticker.quarterly_financials if period == "quarterly" else ticker.financials
 
         if df is None or df.empty:
@@ -152,7 +231,7 @@ def get_income_statement(symbol: str, period: str = "quarterly", count: int = 8)
 @router.get("/{symbol}/health")
 def get_health(symbol: str, period: str = "quarterly", count: int = 8):
     try:
-        ticker = yf.Ticker(symbol.upper())
+        ticker = yf.Ticker(_to_yf_symbol(symbol))
         info = ticker.info
 
         debt_to_equity = _safe(info.get("debtToEquity"))
@@ -224,7 +303,7 @@ def get_health(symbol: str, period: str = "quarterly", count: int = 8):
 @router.get("/{symbol}/valuation")
 def get_valuation(symbol: str, count: int = 8):
     try:
-        ticker = yf.Ticker(symbol.upper())
+        ticker = yf.Ticker(_to_yf_symbol(symbol))
         info   = ticker.info
 
         pe_trailing = _safe(info.get("trailingPE"))
@@ -288,3 +367,102 @@ def get_valuation(symbol: str, count: int = 8):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── 個股法人動向 ─────────────────────────────────────────────────────────────
+
+@router.get("/{symbol}/institutions")
+def get_institutions(symbol: str):
+    key = f"inst_{symbol.upper()}"
+    cached = _INST_CACHE.get(key)
+    if cached and _time.time() < cached[1]:
+        return cached[0]
+    result = _fetch_tw_institutions(symbol) if _is_tw(symbol) else _fetch_us_institutions(symbol)
+    _INST_CACHE[key] = (result, _time.time() + 1800)
+    return result
+
+def _fmt_shares(n: int) -> str:
+    a = abs(n)
+    if a >= 1_000_000: return f"{a/1_000_000:.1f}M 股"
+    if a >= 1_000:     return f"{a/1_000:.0f}K 股"
+    return f"{a:,} 股"
+
+def _fetch_tw_institutions(symbol: str):
+    code = _tw_code(symbol)
+    for date_str in _last_trading_dates_fin(5):
+        try:
+            url  = f"https://www.twse.com.tw/rwd/zh/fund/T86?date={date_str}&selectType=ALLBUT0999&response=json"
+            rows = _req.get(url, timeout=10, headers=_TWSE_HEADERS).json().get("data", [])
+            if not rows:
+                continue
+            for row in rows:
+                if str(row[0]).strip() != code:
+                    continue
+                def pn(s):
+                    try: return int(str(s).replace(",", ""))
+                    except: return 0
+                foreign_net = pn(row[4])
+                trust_net   = pn(row[10])
+                diverge = (foreign_net > 0 and trust_net < 0) or (foreign_net < 0 and trust_net > 0)
+                return {
+                    "type": "tw",
+                    "date": date_str,
+                    "foreign": {
+                        "net": foreign_net,
+                        "direction": "買超" if foreign_net > 0 else "賣超" if foreign_net < 0 else "持平",
+                        "display": _fmt_shares(foreign_net),
+                    },
+                    "trust": {
+                        "net": trust_net,
+                        "direction": "買超" if trust_net > 0 else "賣超" if trust_net < 0 else "持平",
+                        "display": _fmt_shares(trust_net),
+                    },
+                    "diverge": diverge,
+                }
+        except Exception:
+            continue
+    return {"type": "tw", "error": "暫無資料"}
+
+def _fetch_us_institutions(symbol: str):
+    try:
+        ticker = yf.Ticker(symbol.upper())
+        expirations = ticker.options
+        if not expirations:
+            return {"type": "us", "error": "無期權資料"}
+
+        expiry = expirations[0]
+        chain  = ticker.option_chain(expiry)
+        calls, puts = chain.calls, chain.puts
+
+        call_oi = int(calls["openInterest"].fillna(0).sum())
+        put_oi  = int(puts["openInterest"].fillna(0).sum())
+        pc_ratio = round(put_oi / call_oi, 2) if call_oi > 0 else None
+
+        info  = ticker.info
+        price = _safe(info.get("regularMarketPrice") or info.get("currentPrice"))
+        atm_iv = None
+        if price is not None and not calls.empty:
+            idx = (calls["strike"] - price).abs().idxmin()
+            iv  = calls.loc[idx, "impliedVolatility"]
+            if iv is not None:
+                atm_iv = round(float(iv) * 100, 1)
+
+        if pc_ratio is not None:
+            if pc_ratio > 1.2:   pc_label, pc_cls = "偏空", "red"
+            elif pc_ratio < 0.8: pc_label, pc_cls = "偏多", "green"
+            else:                pc_label, pc_cls = "中立", "neutral"
+        else:
+            pc_label, pc_cls = None, "neutral"
+
+        return {
+            "type":     "us",
+            "expiry":   expiry,
+            "call_oi":  call_oi,
+            "put_oi":   put_oi,
+            "pc_ratio": pc_ratio,
+            "pc_label": pc_label,
+            "pc_cls":   pc_cls,
+            "atm_iv":   atm_iv,
+        }
+    except Exception:
+        return {"type": "us", "error": "暫無資料"}

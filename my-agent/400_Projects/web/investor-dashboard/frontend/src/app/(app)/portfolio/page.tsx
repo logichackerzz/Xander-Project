@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Plus, Upload } from "lucide-react"
 import { AddHoldingDialog } from "@/components/portfolio/AddHoldingDialog"
 import { HoldingsTable } from "@/components/portfolio/HoldingsTable"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 
 export type Holding = {
   id: string

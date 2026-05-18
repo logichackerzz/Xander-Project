@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef } from "react"
 import { Search, LoaderCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 
 interface Result {
   symbol: string
   name: string
+  market?: string
 }
 
 interface Props {
@@ -35,7 +37,7 @@ export function FinancialsSearch({ onSearch, loading, compact }: Props) {
       setFetching(true)
       try {
         const res = await fetch(
-          `${API}/portfolio/search?q=${encodeURIComponent(query.trim())}&market=us&limit=8`
+          `${API}/portfolio/search?q=${encodeURIComponent(query.trim())}&market=both&limit=8`
         )
         const data: Result[] = await res.json()
         setResults(data)
@@ -103,10 +105,10 @@ export function FinancialsSearch({ onSearch, loading, compact }: Props) {
         }
         <input
           value={query}
-          onChange={e => setQuery(e.target.value.toUpperCase())}
+          onChange={e => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => { if (results.length > 0) setOpen(true) }}
-          placeholder={compact ? "換一支股票…" : "輸入股票代碼，例如 AAPL、TSLA、MSFT"}
+          placeholder={compact ? "換一支股票…" : "輸入代碼或名稱，例如 AAPL、2330、台積電"}
           className={cn(
             "flex-1 bg-transparent text-[#1E1B4B] placeholder:text-slate-400 focus:outline-none",
             compact ? "text-sm" : "text-base"
@@ -127,7 +129,17 @@ export function FinancialsSearch({ onSearch, loading, compact }: Props) {
               )}
             >
               <span className="w-16 shrink-0 font-mono font-bold text-indigo-700">{r.symbol}</span>
-              <span className="truncate text-slate-600">{r.name}</span>
+              <span className="flex-1 truncate text-slate-600">{r.name}</span>
+              {r.market && (
+                <span className={cn(
+                  "shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                  r.market === "tw"
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "bg-indigo-50 text-indigo-500"
+                )}>
+                  {r.market === "tw" ? "台股" : "美股"}
+                </span>
+              )}
             </li>
           ))}
         </ul>

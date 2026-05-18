@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Globe, Activity, Newspaper, TrendingUp, TrendingDown, ExternalLink, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { readCache, writeCache } from "@/lib/dataCache"
+import { API_BASE } from "@/lib/api"
 
-const API = "http://localhost:8000/api"
+const API = API_BASE
 type TabId = "us" | "tw" | "macro" | "news"
 type Tone  = "green" | "red" | "amber" | "neutral"
 
