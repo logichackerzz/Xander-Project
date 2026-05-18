@@ -14,6 +14,28 @@ import {
   ChevronDown,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { readCache as readApiCache, writeCache as writeApiCache } from "@/lib/dataCache"
+
+const PREFETCH_BASE = "http://localhost:8000/api"
+
+const PREFETCH_PATHS = [
+  "/sentiment/us/sp500", "/sentiment/us/nasdaq", "/sentiment/us/dow",
+  "/sentiment/us/vix", "/sentiment/us/market-breadth", "/sentiment/us/put-call-ratio",
+  "/sentiment/tw/margin", "/sentiment/tw/short-ratio", "/sentiment/tw/foreign-net",
+  "/sentiment/tw/volume", "/sentiment/tw/trust-net", "/sentiment/tw/retail-ratio",
+  "/macro/us10y", "/macro/fed-rate", "/macro/core-cpi",
+  "/macro/dxy", "/macro/unemployment", "/macro/ppi",
+]
+
+function prefetchAll() {
+  PREFETCH_PATHS.forEach(path => {
+    if (readApiCache(path)) return
+    fetch(`${PREFETCH_BASE}${path}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) writeApiCache(path, data) })
+      .catch(() => {})
+  })
+}
 
 const SLOGAN = "財報是企業的語言 難讀 但不該難懂 — Folio 就是為此而生"
 
@@ -267,6 +289,12 @@ useEffect(() => {
 
   const mainRef = useRef<HTMLElement | null>(null)
   useEffect(() => { mainRef.current = document.querySelector("main") }, [])
+
+  // 首頁背景預載：延遲 1.5s 等自身 fetch 完成後靜默預取
+  useEffect(() => {
+    const t = setTimeout(prefetchAll, 1500)
+    return () => clearTimeout(t)
+  }, [])
   const { scrollY } = useScroll({ container: mainRef as React.RefObject<HTMLElement> })
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
 

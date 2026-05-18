@@ -1,13 +1,16 @@
+import os
 import time as _time
 import requests
 import yfinance as yf
 import pandas as pd
 from fastapi import APIRouter
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 router = APIRouter(tags=["macro"])
 
-_BLS     = "https://api.bls.gov/publicAPI/v1/timeseries/data/"
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; research-bot/1.0)"}
 
 # ── 快取 helper ───────────────────────────────────────────────────────────────
@@ -23,22 +26,39 @@ def _cached(key: str, ttl: int, fn):
 
 # ── 共用 helper ───────────────────────────────────────────────────────────────
 
-def _bls_latest(series_id: str):
-    """從 BLS 公開 API（v1, 不需 key）取最新一期與去年同期資料"""
+def _bls_raw(series_id: str) -> list:
+    """BLS API：有 key 走 v2（500次/天），無 key 走 v1（25次/天）"""
     now = datetime.now()
-    resp = requests.get(
-        f"{_BLS}{series_id}?startyear={now.year - 2}&endyear={now.year}",
-        headers=_HEADERS, timeout=10,
-    )
-    data = resp.json()
-    series = data["Results"]["series"][0]["data"]
-    latest = series[0]
-    prev_year = str(int(latest["year"]) - 1)
-    yoy_base = next(
-        (d for d in series if d["year"] == prev_year and d["period"] == latest["period"]),
-        None,
-    )
-    return latest, yoy_base
+    key = os.getenv("BLS_API_KEY", "").strip()
+
+    if key:
+        # v2：POST，額度 500次/天，可抓更長歷史
+        url  = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
+        body = {
+            "seriesid":        [series_id],
+            "startyear":       str(now.year - 3),
+            "endyear":         str(now.year),
+            "registrationkey": key,
+        }
+        resp = requests.post(url, json=body, headers=_HEADERS, timeout=10)
+    else:
+        # v1：GET，免費但每 IP 25次/天
+        url  = f"https://api.bls.gov/publicAPI/v1/timeseries/data/{series_id}?startyear={now.year - 2}&endyear={now.year}"
+        resp = requests.get(url, headers=_HEADERS, timeout=10)
+
+    d = resp.json()
+    if d.get("status") != "REQUEST_SUCCEEDED":
+        raise ValueError(f"BLS API 失敗: {d.get('status')} {d.get('message', '')}")
+    return d["Results"]["series"][0]["data"]
+
+def _yoy(series: list, entry: dict) -> float | None:
+    """計算某期的 YoY%（去年同期比較）"""
+    base = next((d for d in series
+                 if d["year"] == str(int(entry["year"]) - 1)
+                 and d["period"] == entry["period"]), None)
+    if not base:
+        return None
+    return round((float(entry["value"]) - float(base["value"])) / float(base["value"]) * 100, 1)
 
 # ── 1. 美債 10 年期殖利率（2 分鐘快取） ──────────────────────────────────────
 
@@ -67,12 +87,15 @@ def get_fed_rate():
         if irx.empty or tnx.empty: raise ValueError("無資料")
         r3m, r10y = round(float(irx["Close"].iloc[-1]),2), round(float(tnx["Close"].iloc[-1]),2)
         spread = round(r3m - r10y, 2)
+        prev_spread = None
+        if len(irx) >= 2 and len(tnx) >= 2:
+            prev_spread = round(float(irx["Close"].iloc[-2]) - float(tnx["Close"].iloc[-2]), 2)
         if spread > 0.75:   label, tone = "預期降息", "green"
         elif spread > 0.2:  label, tone = "降息預期升溫", "green"
         elif spread > -0.2: label, tone = "高息維持", "neutral"
         else:               label, tone = "高息持續", "red"
         return {"value": r3m, "unit": "%", "spread": spread, "label": label, "tone": tone,
-                "note": f"3M-10Y 利差 {spread:+.2f}%"}
+                "note": f"3M-10Y 利差 {spread:+.2f}%", "prev_spread": prev_spread}
     try:
         return _cached("fed-rate", 120, _fetch)
     except Exception as e:
@@ -84,13 +107,17 @@ def get_fed_rate():
 @router.get("/core-cpi")
 def get_core_cpi():
     def _fetch():
-        latest, yoy_base = _bls_latest("CUSR0000SA0L1E")
-        val_now = float(latest["value"])
-        if not yoy_base: raise ValueError("找不到去年同期")
-        yoy = round((val_now - float(yoy_base["value"])) / float(yoy_base["value"]) * 100, 1)
+        series = _bls_raw("CUSR0000SA0L1E")
+        latest = series[0]
+        prev_m = series[1] if len(series) > 1 else None
+        yoy = _yoy(series, latest)
+        if yoy is None: raise ValueError("找不到去年同期")
+        prev_yoy = _yoy(series, prev_m) if prev_m else None
         label, tone = ("通膨降溫","green") if yoy<=2.5 else ("通膨頑強","amber") if yoy<=3.5 else ("通膨頑強","red")
         return {"value": yoy, "unit": "%", "label": label, "tone": tone,
-                "period": f"{latest['year']}-{latest['periodName']}"}
+                "period": f"{latest['year']}-{latest['periodName']}",
+                "prev_value": prev_yoy,
+                "prev_period": f"{prev_m['year']}-{prev_m['periodName']}" if prev_m else None}
     try:
         return _cached("core-cpi", 3600, _fetch)
     except Exception as e:
@@ -119,11 +146,16 @@ def get_dxy():
 @router.get("/unemployment")
 def get_unemployment():
     def _fetch():
-        latest, _ = _bls_latest("LNS14000000")
+        series = _bls_raw("LNS14000000")
+        latest = series[0]
+        prev_m = series[1] if len(series) > 1 else None
         val = float(latest["value"])
+        prev_val = float(prev_m["value"]) if prev_m else None
         label, tone = ("就業強勁","green") if val<4 else ("就業趨緩","amber") if val<5 else ("衰退隱憂","red")
         return {"value": val, "unit": "%", "label": label, "tone": tone,
-                "period": f"{latest['year']}-{latest['periodName']}"}
+                "period": f"{latest['year']}-{latest['periodName']}",
+                "prev_value": prev_val,
+                "prev_period": f"{prev_m['year']}-{prev_m['periodName']}" if prev_m else None}
     try:
         return _cached("unemployment", 3600, _fetch)
     except Exception as e:
@@ -138,15 +170,48 @@ def get_ism_pmi():
     PMI 外部源均被地區封鎖，以 BLS 製造業就業 MoM 衡量景氣擴張/收縮。
     """
     def _fetch():
-        latest, prev = _bls_latest("CES3000000001")
+        series   = _bls_raw("CES3000000001")
+        latest   = series[0]
+        prev     = series[1] if len(series) > 1 else None
+        pprev    = series[2] if len(series) > 2 else None
         val_now  = float(latest["value"])
         val_prev = float(prev["value"]) if prev else val_now
+        val_pp   = float(pprev["value"]) if pprev else val_prev
         mom      = round(val_now - val_prev, 1)
+        prev_mom = round(val_prev - val_pp, 1) if pprev else None
         label, tone = ("製造業擴張","green") if mom>=20 else ("製造業持平","neutral") if mom>=0 else ("製造業趨緩","amber") if mom>=-20 else ("製造業收縮","red")
         return {"value": mom, "unit": "K", "label": label, "tone": tone,
-                "period": f"{latest['year']}-{latest['periodName']}"}
+                "period": f"{latest['year']}-{latest['periodName']}",
+                "prev_value": prev_mom,
+                "prev_period": f"{prev['year']}-{prev['periodName']}" if prev else None}
     try:
         return _cached("ism-pmi", 3600, _fetch)
     except Exception as e:
         print(f"[ism-pmi] {str(e)[:80]}")
+        return None
+
+# ── 7. PPI 生產者物價指數（年增率） ────────────────────────────────────────────
+
+@router.get("/ppi")
+def get_ppi():
+    """PPI Final Demand YoY（BLS WPSFD49116），CPI 的上游領先指標"""
+    def _fetch():
+        series = _bls_raw("WPSFD49116")
+        latest = series[0]
+        prev_m = series[1] if len(series) > 1 else None
+        yoy = _yoy(series, latest)
+        if yoy is None: raise ValueError("找不到去年同期")
+        prev_yoy = _yoy(series, prev_m) if prev_m else None
+        if yoy <= 1.0:   label, tone = "PPI 通縮壓力", "green"
+        elif yoy <= 3.0: label, tone = "PPI 溫和", "green"
+        elif yoy <= 5.0: label, tone = "PPI 偏高", "amber"
+        else:            label, tone = "PPI 過熱", "red"
+        return {"value": yoy, "unit": "%", "label": label, "tone": tone,
+                "period": f"{latest['year']}-{latest['periodName']}",
+                "prev_value": prev_yoy,
+                "prev_period": f"{prev_m['year']}-{prev_m['periodName']}" if prev_m else None}
+    try:
+        return _cached("ppi", 3600, _fetch)
+    except Exception as e:
+        print(f"[ppi] {str(e)[:80]}")
         return None

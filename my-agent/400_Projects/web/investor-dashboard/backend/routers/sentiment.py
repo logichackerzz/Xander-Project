@@ -347,9 +347,8 @@ def get_tw_trust_net():
                 net_str = row[3].replace(",", "").replace("+", "")
                 net     = int(net_str)
                 net_yi  = round(net / 1e8, 2)
-                # 台灣慣例：買超=紅=上漲，賣超=綠=下跌
                 label   = "買超" if net >= 0 else "賣超"
-                tone    = "red"  if net >= 0 else "green"
+                tone    = "green" if net >= 0 else "red"
                 return {"value": abs(net_yi), "raw": net_yi,
                         "unit": "億元", "label": label, "tone": tone, "date": date_used}
         raise ValueError("找不到投信列")
@@ -453,30 +452,110 @@ def get_tw_volume():
 
 # ── 財經新聞 ──────────────────────────────────────────────────────────────
 
+_NEWS_SOURCES = [
+    {
+        "url":       "https://www.cnbc.com/id/20910258/device/rss/rss.html",
+        "publisher": "CNBC",
+        "region":    "US",
+        "lang":      "en",
+    },
+    {
+        "url":       "https://www.investing.com/rss/news_14.rss",
+        "publisher": "Investing.com",
+        "region":    "GLOBAL",
+        "lang":      "en",
+    },
+    {
+        "url":       "https://feeds.npr.org/1017/rss.xml",
+        "publisher": "NPR",
+        "region":    "US",
+        "lang":      "en",
+    },
+    {
+        "url":       "https://news.google.com/rss/search?q=%E5%88%A9%E7%8E%87+%E9%80%9A%E8%86%A8+%E6%99%AF%E6%B0%A3+%E7%B6%93%E6%BF%9F+when%3A30d&hl=zh-TW&gl=TW&ceid=TW:zh-Hant",
+        "publisher": None,
+        "region":    "TW",
+        "lang":      "zh",
+    },
+]
+
+def _parse_pub_date(date_str: str) -> str:
+    if not date_str:
+        return ""
+    from email.utils import parsedate_to_datetime
+    try:
+        return parsedate_to_datetime(date_str).isoformat()
+    except Exception:
+        pass
+    try:
+        return datetime.fromisoformat(date_str.replace("Z", "+00:00")).isoformat()
+    except Exception:
+        return date_str
+
+def _strip_html(text: str) -> str:
+    import re
+    return re.sub(r"<[^>]+>", "", text).strip()
+
+def _fetch_rss(source: dict) -> list[dict]:
+    import feedparser, re
+    try:
+        r = requests.get(source["url"], timeout=8, headers=TWSE_HEADERS)
+        feed = feedparser.parse(r.content)
+    except Exception:
+        return []
+
+    items = []
+    for entry in feed.entries:
+        raw_title = entry.get("title", "").strip()
+        if not raw_title:
+            continue
+
+        if source["publisher"] is None:
+            src = entry.get("source", {})
+            publisher = src.get("title", "") if isinstance(src, dict) else ""
+            title = re.sub(r"\s*-\s*" + re.escape(publisher) + r"\s*$", "", raw_title).strip() if publisher else raw_title
+        else:
+            publisher = source["publisher"]
+            title = raw_title
+
+        summary = _strip_html(entry.get("summary", ""))
+        # 避免 summary 和 title 完全一樣
+        if summary == title:
+            summary = ""
+
+        items.append({
+            "title":     title,
+            "summary":   summary[:200] if summary else "",
+            "publisher": publisher,
+            "pub_date":  _parse_pub_date(entry.get("published", entry.get("updated", ""))),
+            "url":       entry.get("link", ""),
+            "region":    source["region"],
+            "lang":      source["lang"],
+        })
+    return items
+
 @router.get("/news")
 def get_news(limit: int = 15):
-    """Yahoo Finance RSS（台股 + 美股）"""
-    articles = []
-    feeds = [
-        "https://feeds.finance.yahoo.com/rss/2.0/headline?s=%5ETWII&region=TW&lang=zh-TW",
-        "https://feeds.finance.yahoo.com/rss/2.0/headline?s=SPY&region=US&lang=en-US",
-    ]
-    try:
-        for feed_url in feeds:
-            res  = requests.get(feed_url, timeout=8, headers=TWSE_HEADERS)
-            root = ET.fromstring(res.text)
-            for item in root.findall(".//item"):
-                title  = item.findtext("title",   "").strip()
-                link   = item.findtext("link",    "").strip()
-                pub    = item.findtext("pubDate", "").strip()
-                src_el = item.find("source")
-                source = src_el.text.strip() if src_el is not None else "Yahoo Finance"
-                if title and link:
-                    articles.append({"title": title, "url": link,
-                                     "source": source, "published_at": pub})
-            if len(articles) >= limit:
+    """多來源 RSS：CNBC / Investing.com / NPR / Google News TW，輪替取篇確保來源均衡"""
+    per_source = max(1, limit // len(_NEWS_SOURCES))
+    seen: set[str] = set()
+    buckets: list[list[dict]] = []
+
+    for source in _NEWS_SOURCES:
+        bucket: list[dict] = []
+        for item in _fetch_rss(source):
+            if len(bucket) >= per_source:
                 break
-        return {"articles": articles[:limit]}
-    except Exception:
-        return {"articles": []}
+            if item["title"] in seen:
+                continue
+            seen.add(item["title"])
+            bucket.append(item)
+        buckets.append(bucket)
+
+    result: list[dict] = []
+    for round_items in zip(*buckets):
+        result.extend(round_items)
+
+    result.sort(key=lambda x: x["pub_date"], reverse=True)
+    return {"articles": result[:limit]}
 

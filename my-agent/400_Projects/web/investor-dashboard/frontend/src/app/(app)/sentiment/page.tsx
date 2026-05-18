@@ -1,9 +1,10 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Globe, Activity, Newspaper, TrendingUp, TrendingDown, ExternalLink, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { readCache, writeCache } from "@/lib/dataCache"
 
 const API = "http://localhost:8000/api"
 type TabId = "us" | "tw" | "macro" | "news"
@@ -53,6 +54,9 @@ interface CardData {
   dateLabel?: string
   highLow?: HighLow
   loading?: boolean
+  prev?: string           // 上期數值顯示字串（含單位）
+  prevLabel?: string      // "昨收" | "上期"
+  prevTone?: "green" | "red" | "neutral"
 }
 
 function KpiCard({ card }: { card: CardData }) {
@@ -76,13 +80,25 @@ function KpiCard({ card }: { card: CardData }) {
         <p className="mt-1 text-base font-bold text-[#1E1B4B]">{card.label}</p>
       </div>
 
-      {loading ? (
-        <div className="space-y-2">
-          <div className="h-10 w-28 rounded-xl bg-slate-100/80 animate-pulse" />
-          <div className="h-4 w-20 rounded bg-slate-100/80 animate-pulse" />
-        </div>
-      ) : (
-        <div className="flex items-end justify-between gap-2">
+      <AnimatePresence mode="wait" initial={false}>
+        {loading ? (
+          <motion.div
+            key="skeleton"
+            className="space-y-2"
+            exit={{ opacity: 0, filter: "blur(4px)", transition: { duration: 0.18 } }}
+          >
+            <div className="h-10 w-28 rounded-xl bg-slate-100/80 animate-pulse" />
+            <div className="h-4 w-20 rounded bg-slate-100/80 animate-pulse" />
+            <div className="h-3 w-14 rounded bg-slate-100/80 animate-pulse" />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="content"
+            className="flex items-end justify-between gap-2"
+            initial={{ opacity: 0, y: 6, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.4, ease: EASE }}
+          >
           <div>
             <motion.p
               key={card.value}
@@ -98,14 +114,31 @@ function KpiCard({ card }: { card: CardData }) {
             <p className={cn("mt-1 text-xs", card.change ? "text-slate-400" : "invisible select-none")}>
               {card.change ?? " "}
             </p>
+            <div className={cn("mt-0.5 flex items-center gap-1", !card.prev && "invisible select-none")}>
+              <span className="text-[10px] text-slate-400">{card.prevLabel ?? "上期"}</span>
+              <span className={cn("text-[10px] font-medium tabular-nums",
+                card.prevTone === "green" ? "text-emerald-500" :
+                card.prevTone === "red"   ? "text-red-400" : "text-slate-400"
+              )}>
+                {card.prev ?? "—"}
+              </span>
+              {card.prevTone === "green" && <TrendingUp  className="size-2.5 text-emerald-400 shrink-0" />}
+              {card.prevTone === "red"   && <TrendingDown className="size-2.5 text-red-400 shrink-0" />}
+            </div>
           </div>
           {card.badge && (
-            <span className={cn("rounded-full border px-2.5 py-1 text-xs font-semibold shrink-0", TONE_BADGE[card.tone])}>
-              {card.badge}
-            </span>
-          )}
-        </div>
-      )}
+              <motion.span
+                className={cn("rounded-full border px-2.5 py-1 text-xs font-semibold shrink-0", TONE_BADGE[card.tone])}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.1, ease: EASE }}
+              >
+                {card.badge}
+              </motion.span>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 固定高度底部區塊，確保所有卡片高度一致 */}
       <div className="h-9 flex items-center">
@@ -139,7 +172,22 @@ function KpiCard({ card }: { card: CardData }) {
 }
 
 // ── News Tab ───────────────────────────────────────────────────────────────
-interface NewsArticle { title: string; url: string; source: string; published_at: string }
+interface NewsArticle {
+  title:     string
+  summary:   string
+  publisher: string
+  pub_date:  string
+  url:       string
+  region:    string
+  lang:      string
+}
+
+const REGION_BADGE: Record<string, string> = {
+  US:     "bg-blue-50 text-blue-500 border-blue-100",
+  TW:     "bg-emerald-50 text-emerald-600 border-emerald-100",
+  GLOBAL: "bg-violet-50 text-violet-500 border-violet-100",
+}
+const REGION_LABEL: Record<string, string> = { US: "美股", TW: "台股", GLOBAL: "全球" }
 
 function parseRelativeTime(pubDate: string): string {
   try {
@@ -155,7 +203,7 @@ function NewsTab() {
   const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
-    fetch(`${API}/sentiment/news?limit=15`)
+    fetch(`${API}/sentiment/news?limit=16`)
       .then(r => r.ok ? r.json() : { articles: [] })
       .then(d => setArticles(d.articles ?? []))
       .catch(() => {})
@@ -164,14 +212,13 @@ function NewsTab() {
 
   if (loading) return (
     <div className="space-y-3">
-      {Array.from({ length: 8 }).map((_, i) => (
+      {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/60
-          shadow-[0_2px_12px_rgba(99,102,241,0.07)] px-5 py-4 flex items-center gap-4">
-          <div className="flex-1 space-y-2">
-            <div className="h-3 w-3/4 rounded bg-slate-100/80 animate-pulse" />
-            <div className="h-2.5 w-1/3 rounded bg-slate-100/80 animate-pulse" />
-          </div>
-          <div className="h-2.5 w-16 rounded bg-slate-100/80 animate-pulse shrink-0" />
+          shadow-[0_2px_12px_rgba(99,102,241,0.07)] px-5 py-4 space-y-2">
+          <div className="h-3.5 w-3/4 rounded bg-slate-100/80 animate-pulse" />
+          <div className="h-2.5 w-full rounded bg-slate-100/80 animate-pulse" />
+          <div className="h-2.5 w-1/2 rounded bg-slate-100/80 animate-pulse" />
+          <div className="h-2 w-1/4 rounded bg-slate-100/80 animate-pulse mt-1" />
         </div>
       ))}
     </div>
@@ -202,12 +249,22 @@ function NewsTab() {
             <p className="text-sm font-semibold text-[#1E1B4B] leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2">
               {a.title}
             </p>
-            <div className="mt-1.5 flex items-center gap-2">
-              <span className="text-[11px] text-slate-400">{a.source}</span>
-              {a.published_at && (
+            {a.summary && (
+              <p className="mt-1 text-[12px] text-slate-400 leading-relaxed line-clamp-2">
+                {a.summary}
+              </p>
+            )}
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              {a.region && (
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium border ${REGION_BADGE[a.region] ?? REGION_BADGE.GLOBAL}`}>
+                  {REGION_LABEL[a.region] ?? a.region}
+                </span>
+              )}
+              <span className="text-[11px] text-slate-400">{a.publisher}</span>
+              {a.pub_date && (
                 <>
                   <span className="text-slate-200">·</span>
-                  <span className="text-[11px] text-slate-400">{parseRelativeTime(a.published_at)}</span>
+                  <span className="text-[11px] text-slate-400">{parseRelativeTime(a.pub_date)}</span>
                 </>
               )}
             </div>
@@ -217,6 +274,39 @@ function NewsTab() {
       ))}
     </div>
   )
+}
+
+// ── prev 計算 helpers ─────────────────────────────────────────────────────
+type PrevTone = "green" | "red" | "neutral"
+
+function calcPrevTone(curr: number, prev: number, higherIsBetter: boolean): PrevTone {
+  if (Math.abs(curr - prev) < 1e-9) return "neutral"
+  return (curr > prev) === higherIsBetter ? "green" : "red"
+}
+
+// 從 change（絕對差）推算前期值
+function prevFromChange(
+  value: number | null | undefined,
+  change: number | null | undefined,
+  higherIsBetter: boolean,
+  fmt: (n: number) => string,
+  label = "昨收",
+): Pick<CardData, "prev" | "prevLabel" | "prevTone"> {
+  if (value == null || change == null) return {}
+  const prevVal = value - change
+  return { prev: fmt(prevVal), prevLabel: label, prevTone: calcPrevTone(value, prevVal, higherIsBetter) }
+}
+
+// 從後端 prev_value 直接建立
+function prevFromApi(
+  curr: number | null | undefined,
+  prevVal: number | null | undefined,
+  higherIsBetter: boolean,
+  fmt: (n: number) => string,
+  label = "上期",
+): Pick<CardData, "prev" | "prevLabel" | "prevTone"> {
+  if (curr == null || prevVal == null) return {}
+  return { prev: fmt(prevVal), prevLabel: label, prevTone: calcPrevTone(curr, prevVal, higherIsBetter) }
 }
 
 // ── US / TW card builders ──────────────────────────────────────────────────
@@ -238,6 +328,7 @@ function buildUsCards(data: Record<string, any>, load: Record<string, boolean>):
       dateLabel: sp?.is_today === false ? "昨日收盤" : undefined,
       highLow: sp?.high != null && sp?.low != null ? { high: sp.high, low: sp.low, isToday: !!sp.is_today } : undefined,
       loading: load.sp500,
+      ...prevFromChange(sp?.value, sp?.change, true, n => fmtIndex(n)),
     },
     {
       label: "NASDAQ", sublabel: "那斯達克綜合指數",
@@ -249,6 +340,7 @@ function buildUsCards(data: Record<string, any>, load: Record<string, boolean>):
       dateLabel: nq?.is_today === false ? "昨日收盤" : undefined,
       highLow: nq?.high != null && nq?.low != null ? { high: nq.high, low: nq.low, isToday: !!nq.is_today } : undefined,
       loading: load.nasdaq,
+      ...prevFromChange(nq?.value, nq?.change, true, n => fmtIndex(n)),
     },
     {
       label: "道瓊斯", sublabel: "Dow Jones 工業指數",
@@ -260,6 +352,7 @@ function buildUsCards(data: Record<string, any>, load: Record<string, boolean>):
       dateLabel: dj?.is_today === false ? "昨日收盤" : undefined,
       highLow: dj?.high != null && dj?.low != null ? { high: dj.high, low: dj.low, isToday: !!dj.is_today } : undefined,
       loading: load.dow,
+      ...prevFromChange(dj?.value, dj?.change, true, n => fmtIndex(n)),
     },
     {
       label: "VIX 恐慌指數", sublabel: "CBOE Volatility Index",
@@ -269,6 +362,7 @@ function buildUsCards(data: Record<string, any>, load: Record<string, boolean>):
       accentClass: "from-amber-400/30 to-orange-400/30",
       change: vix?.change_pct != null ? `${vix.change_pct > 0 ? "+" : ""}${vix.change_pct}%` : undefined,
       loading: load.vix,
+      ...prevFromChange(vix?.value, vix?.change, false, n => n.toFixed(2)),
     },
     {
       label: "市場廣度指標", sublabel: "Market Breadth",
@@ -355,10 +449,11 @@ function buildMacroCards(data: Record<string, any>, load: Record<string, boolean
   const y10  = data.us10y
   const fed  = data.fedRate
   const cpi  = data.coreCpi
+  const ppi  = data.ppi
   const dxy  = data.dxy
   const unemp = data.unemployment
-  const pmi  = data.ismPmi
   return [
+    // ── 上排：利率 & 美元 ────────────────────────────────────────────────
     {
       label: "美債 10 年期殖利率", sublabel: "US 10-Year Treasury",
       value: y10?.value != null ? String(y10.value) : "—",
@@ -368,6 +463,7 @@ function buildMacroCards(data: Record<string, any>, load: Record<string, boolean
       accentClass: "from-blue-400/30 to-indigo-400/30",
       change: y10?.change != null ? `${y10.change > 0 ? "+" : ""}${y10.change}%` : undefined,
       loading: load.us10y,
+      ...prevFromChange(y10?.value, y10?.change, false, n => `${n.toFixed(3)}%`),
     },
     {
       label: "Fed 利率預期", sublabel: "3M-10Y 殖利率利差",
@@ -378,16 +474,7 @@ function buildMacroCards(data: Record<string, any>, load: Record<string, boolean
       accentClass: "from-violet-400/30 to-purple-400/30",
       change: fed?.note ?? undefined,
       loading: load.fedRate,
-    },
-    {
-      label: "核心 CPI 年增率", sublabel: "Core CPI YoY",
-      value: cpi?.value != null ? String(cpi.value) : "—",
-      unit: "%",
-      badge: cpi?.label ?? null, tone: (cpi?.tone as Tone) ?? "neutral",
-      hint: "聯準會調整貨幣政策的核心通膨指標，直接牽動利息走向與美元強弱。",
-      accentClass: "from-orange-400/30 to-red-400/30",
-      change: cpi?.period ?? undefined,
-      loading: load.coreCpi,
+      ...prevFromApi(fed?.spread, fed?.prev_spread, true, n => `利差 ${n > 0 ? "+" : ""}${n.toFixed(2)}%`, "昨日"),
     },
     {
       label: "美元指數 (DXY)", sublabel: "US Dollar Index",
@@ -397,6 +484,30 @@ function buildMacroCards(data: Record<string, any>, load: Record<string, boolean
       accentClass: "from-emerald-400/30 to-teal-400/30",
       change: dxy?.change_pct != null ? `${dxy.change_pct > 0 ? "+" : ""}${dxy.change_pct}%` : undefined,
       loading: load.dxy,
+      ...prevFromChange(dxy?.value, dxy?.change, false, n => n.toFixed(2)),
+    },
+    // ── 下排：通膨三指標 ──────────────────────────────────────────────────
+    {
+      label: "核心 CPI 年增率", sublabel: "Core CPI YoY",
+      value: cpi?.value != null ? String(cpi.value) : "—",
+      unit: "%",
+      badge: cpi?.label ?? null, tone: (cpi?.tone as Tone) ?? "neutral",
+      hint: "聯準會調整貨幣政策的核心通膨指標，直接牽動利息走向與美元強弱。",
+      accentClass: "from-orange-400/30 to-red-400/30",
+      change: cpi?.period ?? undefined,
+      loading: load.coreCpi,
+      ...prevFromApi(cpi?.value, cpi?.prev_value, false, n => `${n.toFixed(1)}%`),
+    },
+    {
+      label: "PPI 終端需求年增率", sublabel: "PPI Final Demand YoY",
+      value: ppi?.value != null ? String(ppi.value) : "—",
+      unit: "%",
+      badge: ppi?.label ?? null, tone: (ppi?.tone as Tone) ?? "neutral",
+      hint: "生產者物價指數，CPI 的上游領先指標。PPI 上升通常 1-2 個月後反映到消費端。",
+      accentClass: "from-rose-400/30 to-orange-400/30",
+      change: ppi?.period ?? undefined,
+      loading: load.ppi,
+      ...prevFromApi(ppi?.value, ppi?.prev_value, false, n => `${n.toFixed(1)}%`),
     },
     {
       label: "美國失業率", sublabel: "US Unemployment Rate",
@@ -407,18 +518,7 @@ function buildMacroCards(data: Record<string, any>, load: Record<string, boolean
       accentClass: "from-sky-400/30 to-blue-400/30",
       change: unemp?.period ?? undefined,
       loading: load.unemployment,
-    },
-    {
-      label: "製造業就業月增幅", sublabel: "BLS Manufacturing MoM",
-      value: pmi?.value != null
-        ? `${pmi.value > 0 ? "+" : ""}${pmi.value}`
-        : "—",
-      unit: "K",
-      badge: pmi?.label ?? null, tone: (pmi?.tone as Tone) ?? "neutral",
-      hint: "製造業就業月增幅衡量實體經濟動能。正值代表製造業擴張，負值代表收縮。",
-      accentClass: "from-amber-400/30 to-yellow-400/30",
-      change: pmi?.period ?? undefined,
-      loading: load.ismPmi,
+      ...prevFromApi(unemp?.value, unemp?.prev_value, false, n => `${n.toFixed(1)}%`),
     },
   ]
 }
@@ -440,7 +540,7 @@ export default function SentimentPage() {
   const [macroData, setMacroData] = useState<Record<string, any>>({})
   const [macroLoad, setMacroLoad] = useState<Record<string, boolean>>({
     us10y: true, fedRate: true, coreCpi: true,
-    dxy: true, unemployment: true, ismPmi: true,
+    dxy: true, unemployment: true, ppi: true,
   })
 
   const fetchOne = async (
@@ -449,9 +549,16 @@ export default function SentimentPage() {
     setter: React.Dispatch<React.SetStateAction<Record<string, any>>>,
     loadSetter: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
   ) => {
+    const cached = readCache(url)
+    if (cached) {
+      setter(prev => ({ ...prev, [key]: cached }))
+      loadSetter(prev => ({ ...prev, [key]: false }))
+      return
+    }
     try {
       const r = await fetch(`${API}${url}`)
       const d = r.ok ? await r.json() : null
+      if (d) writeCache(url, d)
       setter(prev => ({ ...prev, [key]: d }))
     } catch {
       setter(prev => ({ ...prev, [key]: null }))
@@ -478,7 +585,7 @@ export default function SentimentPage() {
     fetchOne("/macro/core-cpi",     "coreCpi",     setMacroData, setMacroLoad)
     fetchOne("/macro/dxy",          "dxy",         setMacroData, setMacroLoad)
     fetchOne("/macro/unemployment", "unemployment",setMacroData, setMacroLoad)
-    fetchOne("/macro/ism-pmi",      "ismPmi",      setMacroData, setMacroLoad)
+    fetchOne("/macro/ppi",          "ppi",         setMacroData, setMacroLoad)
   }, [])
 
   const usCards    = buildUsCards(usData, usLoad)

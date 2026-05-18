@@ -1,10 +1,12 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { readCache, writeCache } from "@/lib/dataCache"
 
 const API = "http://localhost:8000/api/macro"
+const FULL_API = "http://localhost:8000/api"
 type Tone = "green" | "red" | "amber" | "neutral"
 
 const TONE_BADGE: Record<Tone, string> = {
@@ -47,13 +49,25 @@ function MacroCard({ card }: { card: CardData }) {
         <p className="mt-1 text-base font-bold text-[#1E1B4B]">{card.label}</p>
       </div>
 
-      {loading ? (
-        <div className="space-y-2">
-          <div className="h-10 w-28 rounded-xl bg-slate-100/80 animate-pulse" />
-          <div className="h-4 w-20 rounded bg-slate-100/80 animate-pulse" />
-        </div>
-      ) : (
-        <div className="flex items-end justify-between gap-2">
+      <AnimatePresence mode="wait" initial={false}>
+        {loading ? (
+          <motion.div
+            key="skeleton"
+            className="space-y-2"
+            exit={{ opacity: 0, filter: "blur(4px)", transition: { duration: 0.18 } }}
+          >
+            <div className="h-10 w-28 rounded-xl bg-slate-100/80 animate-pulse" />
+            <div className="h-4 w-20 rounded bg-slate-100/80 animate-pulse" />
+            <div className="h-3 w-14 rounded bg-slate-100/80 animate-pulse" />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="content"
+            className="flex items-end justify-between gap-2"
+            initial={{ opacity: 0, y: 6, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.4, ease: EASE }}
+          >
           <div>
             <motion.p
               key={card.value}
@@ -71,12 +85,18 @@ function MacroCard({ card }: { card: CardData }) {
             </p>
           </div>
           {card.badge && (
-            <span className={cn("rounded-full border px-2.5 py-1 text-xs font-semibold shrink-0", TONE_BADGE[card.tone])}>
+            <motion.span
+              className={cn("rounded-full border px-2.5 py-1 text-xs font-semibold shrink-0", TONE_BADGE[card.tone])}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.1, ease: EASE }}
+            >
               {card.badge}
-            </span>
+            </motion.span>
           )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="h-9 flex items-center">
         <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2">{card.hint}</p>
@@ -93,9 +113,17 @@ export default function MacroPage() {
   })
 
   const fetchOne = async (path: string, key: string) => {
+    const cacheKey = `/macro${path}`
+    const cached = readCache(cacheKey)
+    if (cached) {
+      setData(prev => ({ ...prev, [key]: cached }))
+      setLoad(prev => ({ ...prev, [key]: false }))
+      return
+    }
     try {
       const r = await fetch(`${API}${path}`)
       const d = r.ok ? await r.json() : null
+      if (d) writeCache(cacheKey, d)
       setData(prev => ({ ...prev, [key]: d }))
     } catch {
       setData(prev => ({ ...prev, [key]: null }))
