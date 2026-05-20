@@ -56,24 +56,45 @@ def _b(val):
 def get_overview(symbol: str):
     try:
         ticker = yf.Ticker(_to_yf_symbol(symbol))
-        info = ticker.info
 
-        price = _safe(info.get("regularMarketPrice") or info.get("currentPrice"))
+        # fast_info 不需要 crumb，在雲端部署上比 info 可靠
+        fi = ticker.fast_info
+        price = _safe(getattr(fi, "last_price", None))
         if price is None:
             raise HTTPException(status_code=404, detail=f"找不到股票代碼 {symbol.upper()}")
 
-        prev_close = _safe(info.get("regularMarketPreviousClose") or info.get("previousClose"))
+        prev_close = _safe(getattr(fi, "previous_close", None))
         change_pct = round((price - prev_close) / prev_close * 100, 2) if prev_close else None
+        market_cap  = _safe(getattr(fi, "market_cap", None))
+        week52_high = _safe(getattr(fi, "year_high", None))
+        week52_low  = _safe(getattr(fi, "year_low", None))
+        currency    = getattr(fi, "currency", "USD") or "USD"
+        volume      = _safe(getattr(fi, "three_month_average_volume", None))
+        avg_volume  = volume  # fast_info 沒有 daily volume，用均量代替
+
+        # ticker.info 在雲端可能 401，catch 後 fallback None
+        info: dict = {}
+        try:
+            info = ticker.info or {}
+        except Exception:
+            pass
+
+        sector     = info.get("sector") or info.get("industryDisp") or None
+        beta       = _safe(info.get("beta"))
+        roe_raw    = _safe(info.get("returnOnEquity"))
+        roe_pct    = round(roe_raw * 100, 1) if roe_raw is not None else None
+        gm_raw     = _safe(info.get("grossMargins"))
+        snap_gm    = round(gm_raw * 100, 1) if gm_raw is not None else None
+        quote_type = info.get("quoteType", "EQUITY")
+        name       = info.get("longName") or info.get("shortName") or symbol.upper()
 
         latest_revenue = None
         revenue_yoy_pct = None
         net_margin_pct = None
-
         try:
             qf = ticker.quarterly_financials
             if qf is not None and not qf.empty:
                 cols = sorted(qf.columns, reverse=True)
-
                 if "Total Revenue" in qf.index:
                     rev = qf.loc["Total Revenue"]
                     rev_vals = [_safe(rev[c]) for c in cols if _safe(rev.get(c)) is not None]
@@ -83,7 +104,6 @@ def get_overview(symbol: str):
                         prev = rev_vals[4]
                         if prev and prev != 0:
                             revenue_yoy_pct = round((latest_revenue / prev - 1) * 100, 1)
-
                 if "Total Revenue" in qf.index and "Net Income" in qf.index:
                     r = _safe(qf.loc["Total Revenue", cols[0]]) if cols else None
                     n = _safe(qf.loc["Net Income", cols[0]]) if cols else None
@@ -91,22 +111,6 @@ def get_overview(symbol: str):
                         net_margin_pct = round(n / r * 100, 1)
         except Exception:
             pass
-
-        roe_raw = _safe(info.get("returnOnEquity"))
-        roe_pct = round(roe_raw * 100, 1) if roe_raw is not None else None
-
-        gm_raw = _safe(info.get("grossMargins"))
-        snap_gm = round(gm_raw * 100, 1) if gm_raw is not None else None
-
-        market_cap = _safe(info.get("marketCap"))
-        week52_high = _safe(info.get("fiftyTwoWeekHigh"))
-        week52_low  = _safe(info.get("fiftyTwoWeekLow"))
-        sector      = info.get("sector") or info.get("industryDisp") or None
-
-        volume     = _safe(info.get("volume") or info.get("regularMarketVolume"))
-        avg_volume = _safe(info.get("averageVolume") or info.get("averageVolume10days"))
-        vol_ratio  = round(volume / avg_volume, 2) if volume and avg_volume else None
-        beta       = _safe(info.get("beta"))
 
         rsi_val = None
         try:
@@ -122,25 +126,25 @@ def get_overview(symbol: str):
 
         return {
             "symbol": symbol.upper(),
-            "name": info.get("longName") or info.get("shortName", symbol.upper()),
-            "quote_type": info.get("quoteType", "EQUITY"),
+            "name": name,
+            "quote_type": quote_type,
             "price": price,
             "change_pct": change_pct,
-            "currency": info.get("currency", "USD"),
+            "currency": currency,
             "market_cap": market_cap,
             "week52_high": week52_high,
             "week52_low":  week52_low,
             "sector":      sector,
             "volume":      volume,
             "avg_volume":  avg_volume,
-            "vol_ratio":   vol_ratio,
+            "vol_ratio":   None,
             "beta":        beta,
             "rsi":         rsi_val,
             "kpi": {
-                "revenue_b": _b(latest_revenue),
+                "revenue_b":       _b(latest_revenue),
                 "revenue_yoy_pct": revenue_yoy_pct,
-                "net_margin_pct": net_margin_pct,
-                "roe_pct": roe_pct,
+                "net_margin_pct":  net_margin_pct,
+                "roe_pct":         roe_pct,
             },
             "snap": {
                 "pe_trailing":      _safe(info.get("trailingPE")),
@@ -232,7 +236,11 @@ def get_income_statement(symbol: str, period: str = "quarterly", count: int = 8)
 def get_health(symbol: str, period: str = "quarterly", count: int = 8):
     try:
         ticker = yf.Ticker(_to_yf_symbol(symbol))
-        info = ticker.info
+        info: dict = {}
+        try:
+            info = ticker.info or {}
+        except Exception:
+            pass
 
         debt_to_equity = _safe(info.get("debtToEquity"))
 
@@ -304,7 +312,11 @@ def get_health(symbol: str, period: str = "quarterly", count: int = 8):
 def get_valuation(symbol: str, count: int = 8):
     try:
         ticker = yf.Ticker(_to_yf_symbol(symbol))
-        info   = ticker.info
+        info: dict = {}
+        try:
+            info = ticker.info or {}
+        except Exception:
+            pass
 
         pe_trailing = _safe(info.get("trailingPE"))
         pe_forward  = _safe(info.get("forwardPE"))
