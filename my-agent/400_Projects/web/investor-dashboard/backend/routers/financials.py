@@ -450,8 +450,13 @@ def _fetch_us_institutions(symbol: str):
         put_oi  = int(puts["openInterest"].fillna(0).sum())
         pc_ratio = round(put_oi / call_oi, 2) if call_oi > 0 else None
 
-        info  = ticker.info
-        price = _safe(info.get("regularMarketPrice") or info.get("currentPrice"))
+        info: dict = {}
+        try:
+            info = ticker.info or {}
+        except Exception:
+            pass
+        fi    = ticker.fast_info
+        price = _safe(getattr(fi, "last_price", None)) or _safe(info.get("regularMarketPrice") or info.get("currentPrice"))
         atm_iv = None
         if price is not None and not calls.empty:
             idx = (calls["strike"] - price).abs().idxmin()

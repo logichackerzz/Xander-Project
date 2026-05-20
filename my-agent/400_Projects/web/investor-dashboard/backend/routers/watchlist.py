@@ -40,10 +40,17 @@ def get_watchlist(db: Session = Depends(get_db)):
             yf_sym = item.symbol
             if item.market == "tw" and not yf_sym.upper().endswith((".TW", ".TWO")):
                 yf_sym = yf_sym + ".TW"
-            info = yf.Ticker(yf_sym).info
-            price = _safe(info.get("regularMarketPrice") or info.get("currentPrice"))
-            prev = _safe(info.get("regularMarketPreviousClose") or info.get("previousClose"))
+            ticker = yf.Ticker(yf_sym)
+            fi = ticker.fast_info
+            price      = _safe(getattr(fi, "last_price", None))
+            prev       = _safe(getattr(fi, "previous_close", None))
             change_pct = round((price - prev) / prev * 100, 2) if price and prev else None
+            # ticker.info 在雲端可能 401，fallback None
+            info: dict = {}
+            try:
+                info = ticker.info or {}
+            except Exception:
+                pass
             rec_key = (info.get("recommendationKey") or "").lower()
             if not rec_key:
                 rec_mean = _safe(info.get("recommendationMean"))
