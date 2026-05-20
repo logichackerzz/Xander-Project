@@ -1,9 +1,18 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE_URL = "sqlite:///./holdings.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./holdings.db")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# Render 給的 PostgreSQL URL 開頭是 postgres://，SQLAlchemy 2.x 需要 postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+_is_sqlite = DATABASE_URL.startswith("sqlite")
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False} if _is_sqlite else {},
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
