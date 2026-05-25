@@ -1,0 +1,302 @@
+{
+  "final_url": "https://netreg.isu.edu.tw/wapp/main.asp",
+  "total_links": 74,
+  "menu": [
+    {
+      "name": "���������蝯�",
+      "url": "mailto:ncourse@isu.edu.tw"
+    },
+    {
+      "name": "蝢拙��憭批飛",
+      "url": "https://www.isu.edu.tw/pages/"
+    },
+    {
+      "name": "��砍��",
+      "url": "https://netreg.isu.edu.tw/wapp/bulletin_main.asp?bulletin_type=cc "
+    },
+    {
+      "name": "Web Mail",
+      "url": "https://e-mail.isu.edu.tw/"
+    },
+    {
+      "name": "銵�鈭����",
+      "url": "https://www.isu.edu.tw/calendar"
+    },
+    {
+      "name": "��∟��鞈�閮�",
+      "url": "https://oga.isu.edu.tw/page/鈭日��閮����-ONBswn6WV1p1"
+    },
+    {
+      "name": "��∪�抒����拙飛���",
+      "url": "https://sa1.isu.edu.tw/page/preview-slV0ZNaOQz7x"
+    },
+    {
+      "name": "銝�隤脫�����銵�",
+      "url": "https://netreg.isu.edu.tw/Wapp/wap_doc/day.htm"
+    },
+    {
+      "name": "��∪��摰���典恐撠�撠����",
+      "url": "https://sa1.isu.edu.tw/page/preview-cvaOvQbpLutm"
+    },
+    {
+      "name": "���摰斤楊���隤芣��",
+      "url": "wap_doc/Classroom.pdf"
+    },
+    {
+      "name": "頝券�����(敺�)摮詨��摮貊��",
+      "url": "https://www.isu.edu.tw/newsite/showpage.php?dept_mno=801&dept_id=14&page_id=47472"
+    },
+    {
+      "name": "��餃��(11240004A)�����梯��",
+      "url": "wap_indexmain2.asp?call_from=logout"
+    },
+    {
+      "name": "���閬�������憿�",
+      "url": "wap_00/wap_000120.asp"
+    },
+    {
+      "name": "��啗玨蝺�銝�蝪賢��",
+      "url": "wap_13/wap_130810.asp"
+    },
+    {
+      "name": "撅�雿����敶Ｚ矽���",
+      "url": "wap_00/wap_000150.asp"
+    },
+    {
+      "name": "������摮貉��/��瑁��",
+      "url": "wap_00/wap_000011.asp"
+    },
+    {
+      "name": "���鈭箏�箸�祈�����",
+      "url": "wap_00/wap_001400.asp"
+    },
+    {
+      "name": "撣貊�汞MAIL靽∠拳閮剖��",
+      "url": "wap_00/wap_000700.asp"
+    },
+    {
+      "name": "頧�蝟餌�唾��",
+      "url": "wap_00/wap_000900.asp"
+    },
+    {
+      "name": "UCAN��賣葫蝯������亥岷",
+      "url": "wap_00/wap_000710.asp"
+    },
+    {
+      "name": "撠�撣怨��閮�",
+      "url": "wap_00/wap_000080.asp"
+    },
+    {
+      "name": "��������亥岷銝�頛�",
+      "url": "wap_11/wap_110130.asp"
+    },
+    {
+      "name": "��嗅飛������蝮暹�亥岷銝�頛�",
+      "url": "wap_11/wap_110010.asp"
+    },
+    {
+      "name": "甇瑕僑���蝮暹�亥岷",
+      "url": "wap_11/wap_110020.asp"
+    },
+    {
+      "name": "蝺�銝����隞嗥�唾��",
+      "url": "wap_11/wap_110110.asp"
+    },
+    {
+      "name": "摮賊��鞎餉����拇�寞��隤踵�交�亥岷",
+      "url": "wap_24/wap_240020.asp"
+    },
+    {
+      "name": "隢�������隤脩����脫�亥岷",
+      "url": "wap_13/wap_130040.asp"
+    },
+    {
+      "name": "���霅西玨蝔���亥岷",
+      "url": "wap_13/wap_130050.asp"
+    },
+    {
+      "name": "���隤脰����急�亥岷",
+      "url": "wap_13/wap_130020.asp"
+    },
+    {
+      "name": "������隤脰”",
+      "url": "wap_13/wap_130430.asp"
+    },
+    {
+      "name": "摮貊�����鈭粹�貉玨鞈������亥岷",
+      "url": "wap_13/wap_130030.asp"
+    },
+    {
+      "name": "��貉玨蝣箄��雿�璆�",
+      "url": "wap_13/wap_130410.asp"
+    },
+    {
+      "name": "摮貊��隤脩�����靽桃�唾��",
+      "url": "wap_13/wap_130170.asp"
+    },
+    {
+      "name": "�����������脰玨蝔�撠����",
+      "url": "wap_13/wap_130099.asp"
+    },
+    {
+      "name": "摮貉��105隞亙��������(銝�)撠����",
+      "url": "wap_13/wap_130391.asp"
+    },
+    {
+      "name": "摮貉��104隞亙��������撠����",
+      "url": "wap_13/wap_130390.asp"
+    },
+    {
+      "name": "摮貉��105隞亙��������(鈭�)撠����",
+      "url": "wap_13/wap_130392.asp"
+    },
+    {
+      "name": "���摮豢��閬�摮貊��摰���������亥岷",
+      "url": "wap_13/wap_130090.asp"
+    },
+    {
+      "name": "閮餃�����敶Ｘ�亥岷",
+      "url": "wap_14/wap_140010.asp"
+    },
+    {
+      "name": "蝜唾祥��格�亥岷",
+      "url": "wap_14/wap_140020.asp"
+    },
+    {
+      "name": "��典飛霅������豢�亥岷������",
+      "url": "wap_14/wap_140050.asp"
+    },
+    {
+      "name": "摮貊�������桃�唾��",
+      "url": "wap_30/wap_302100.asp"
+    },
+    {
+      "name": "摮詨�����撖�",
+      "url": "wap_40/wap_400700.asp"
+    },
+    {
+      "name": "������憯�蝮�",
+      "url": "itv/itv_imgcps.asp"
+    },
+    {
+      "name": "摮貊��鞈������啣����唾��",
+      "url": "wap_00/wap_000030.asp"
+    },
+    {
+      "name": "摮貊��鞈������啣����亥岷",
+      "url": "wap_00/wap_000040.asp"
+    },
+    {
+      "name": "銝�撟渡��摮貊��������������",
+      "url": "wap_00/wap_000600.asp"
+    },
+    {
+      "name": "���撟渡��摮貊��������������",
+      "url": "wap_00/wap_000620.asp"
+    },
+    {
+      "name": "������霅���扯�����",
+      "url": "wap_00/wap_000450.asp"
+    },
+    {
+      "name": "��啁��摰����頛�撠�",
+      "url": "itv/itv_list.asp"
+    },
+    {
+      "name": "���閰衣�曉��銵刻�������詨�����",
+      "url": "wap_11/wap_110021.asp"
+    },
+    {
+      "name": "撠梯硫��唾��",
+      "url": "wap_22/wap_220010.asp"
+    },
+    {
+      "name": "撠梯硫������",
+      "url": "wap_22/wap_220020.asp"
+    },
+    {
+      "name": "撠梯硫��亥岷",
+      "url": "wap_22/wap_220030.asp"
+    },
+    {
+      "name": "撘勗�Ｗ�拙飛�����唾��/��亥岷",
+      "url": "wap_22/wap_220060.asp"
+    },
+    {
+      "name": "撠勗飛��芸����唾��",
+      "url": "wap_22/wap_220100.asp"
+    },
+    {
+      "name": "撘勗�Ｗ飛�����������桐����唾��",
+      "url": "wap_22/wap_220200.asp"
+    },
+    {
+      "name": "������璅�摮貊����拚����唾��",
+      "url": "wap_22/wap_220460.asp"
+    },
+    {
+      "name": "������璅�摮詨�拙飛���������",
+      "url": "wap_22/wap_220462.asp"
+    },
+    {
+      "name": "���撣保ffice Hour��亥岷",
+      "url": "wap_13/wap_130130.asp"
+    },
+    {
+      "name": "���摰支蝙��冽�亥岷",
+      "url": "wap_13/wap_130600.asp"
+    },
+    {
+      "name": "摮貊����貉玨雿�璆�",
+      "url": "wap_13/wap_130400.asp"
+    },
+    {
+      "name": "��唾�����霅�霅瑞�扯��閮�",
+      "url": "wap_13/wap_130700.asp"
+    },
+    {
+      "name": "��唾��(敺�)摮詨��摮貊��雿�璆�",
+      "url": "wap_13/wap_130260.asp"
+    },
+    {
+      "name": "摮貊����寡�脤�����靽株玨���瘜�",
+      "url": "wap_13/wap_130270.asp"
+    },
+    {
+      "name": "撅�雿����瘜���亥岷",
+      "url": "wap_00/wap_000180.asp"
+    },
+    {
+      "name": "雿�摰輯��������閬���亥岷",
+      "url": "wap_12/wap_120010.asp"
+    },
+    {
+      "name": "摮詨����萄��雿�璆�/��亥岷",
+      "url": "wap_15/wap_150010.asp"
+    },
+    {
+      "name": "摮詨����萄�����",
+      "url": "wap_15/wap_150020.asp"
+    },
+    {
+      "name": "��梯�����靽桃�唾��雿�璆�",
+      "url": "wap_15/wap_150200.asp"
+    },
+    {
+      "name": "�����賊尹撖拇�賊�Ｘ�∠�唾��",
+      "url": "wap_23/wap_230340.asp"
+    },
+    {
+      "name": "��Ｘ平�����Ｘ�∪����瑕‵撖�",
+      "url": "wap_23/wap_230010.asp"
+    },
+    {
+      "name": "��Ｘ平摮訾����������冽�亥岷",
+      "url": "wap_23/wap_230200.asp"
+    },
+    {
+      "name": "��Ｘ平�����Ｘ�∠�唾����亥岷",
+      "url": "wap_23/wap_230300.asp"
+    }
+  ]
+}

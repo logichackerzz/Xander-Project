@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Folio — 期末發表</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+
+  <!-- Fixed layers -->
+  <div class="orbs" aria-hidden="true">
+    <div class="orb orb--1"></div>
+    <div class="orb orb--2"></div>
+    <div class="orb orb--3"></div>
+    <div class="orb orb--4"></div>
+  </div>
+
+  <!-- Page transition — FOLIO word sweep -->
+  <div id="pageTrans" class="page-trans" aria-hidden="true">
+    <div class="pt-bg"></div>
+    <div class="pt-folio">
+      <span class="pt-l">F</span>
+      <span class="pt-l">O</span>
+      <span class="pt-l">L</span>
+      <span class="pt-l">I</span>
+      <span class="pt-l">O</span>
+    </div>
+  </div>
+
+  <div class="progress-bar" id="progressBar"></div>
+  <nav class="chapter-nav">
+    <span class="chapter-num" id="chapterNum">01</span>
+    <span class="chapter-sep">/</span>
+    <span class="chapter-label" id="chapterLabel">開場</span>
+  </nav>
+
+  <!-- ═══════════════════════════════════════
+       01 — Hero
+  ═══════════════════════════════════════ -->
+  <section class="s" id="s01" data-chapter="01" data-label="開場" data-bg="#FAF9F6">
+    <div class="s__inner">
+      <p class="hero-eyebrow">資料科學系 · 專題報告 · 2026</p>
+      <div class="hero-title-wrap">
+        <h1 class="hero-title">Folio</h1>
+      </div>
+      <div class="hero-line"></div>
+      <p class="hero-tagline">Markets, made readable.</p>
+    </div>
+
+    <!-- GSAP-style rotating sticker badge -->
+    <div class="sticker" id="s01-sticker" aria-hidden="true">
+      <svg class="sticker__ring" viewBox="0 0 140 140">
+        <defs>
+          <path id="sticker-path"
+            d="M70,70 m-50,0 a50,50,0,1,1,100,0 a50,50,0,1,1,-100,0"/>
+        </defs>
+        <text class="sticker__text">
+          <textPath href="#sticker-path" startOffset="0%">
+            FOLIO · 資料科學系 · 2026 · CLAUDE CODE ·&nbsp;
+          </textPath>
+        </text>
+      </svg>
+      <span class="sticker__icon">✦</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       02 — What is Folio?
+  ═══════════════════════════════════════ -->
+  <section class="s" id="s02" data-chapter="02" data-label="Folio" data-bg="#F5F3EE">
+    <div class="s02-stage">
+
+      <!-- Question line -->
+      <p class="s02-question">What is <em>Folio</em>?</p>
+
+      <!-- Scattered letters — absolutely positioned via CSS -->
+      <span class="s02-l" data-i="0">F</span>
+      <span class="s02-l" data-i="1">O</span>
+      <span class="s02-l" data-i="2">L</span>
+      <span class="s02-l" data-i="3">I</span>
+      <span class="s02-l" data-i="4">O</span>
+
+      <!-- Sticker A: rotating ring badge -->
+      <div class="s02-badge s02-badge--a" aria-hidden="true">
+        <svg class="s02-badge__ring" viewBox="0 0 120 120">
+          <defs>
+            <path id="s02-ring"
+              d="M60,60 m-42,0 a42,42,0,1,1,84,0 a42,42,0,1,1,-84,0"/>
+          </defs>
+          <text class="s02-badge__text">
+            <textPath href="#s02-ring">MARKETS · READABLE · FOLIO · </textPath>
+          </text>
+        </svg>
+        <span class="s02-badge__icon">◎</span>
+      </div>
+
+      <!-- Sticker B: pill label -->
+      <div class="s02-badge s02-badge--b" aria-hidden="true">
+        <span>AI × Human</span>
+      </div>
+
+      <!-- Sticker C: year stamp -->
+      <div class="s02-badge s02-badge--c" aria-hidden="true">
+        <span>2026</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       03 — 功能宗旨
+  ═══════════════════════════════════════ -->
+  <section class="s" id="s03" data-chapter="03" data-label="宗旨" data-bg="#F5F3EE">
+    <div class="s__inner s__inner--wide">
+      <span class="s__eyebrow">03 — 功能宗旨</span>
+      <h2 class="feat-heading">Folio 做的三件事</h2>
+      <div class="feat-grid">
+        <div class="feat-card" data-color="indigo">
+          <div class="feat-icon feat-icon--indigo">◎</div>
+          <h3 class="feat-title">即時報價</h3>
+          <p class="feat-body">精選個股最新行情<br>一眼掌握漲跌幅與成交量</p>
+        </div>
+        <div class="feat-card" data-color="cyan">
+          <div class="feat-icon feat-icon--cyan">◈</div>
+          <h3 class="feat-title">自選清單</h3>
+          <p class="feat-body">追蹤你關注的股票<br>自訂化的個人投資清單</p>
+        </div>
+        <div class="feat-card" data-color="violet">
+          <div class="feat-icon feat-icon--violet">◆</div>
+          <h3 class="feat-title">AI 摘要</h3>
+          <p class="feat-body">新聞與財報重點整理<br>讀懂市場背後的故事</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       04 — Live Demo
+  ═══════════════════════════════════════ -->
+  <section class="s" id="s04" data-chapter="04" data-label="Demo" data-bg="#FAF9F6">
+    <div class="s__inner">
+      <span class="s__eyebrow">04 — Live Demo</span>
+      <div class="demo-browser">
+        <div class="demo-browser__bar">
+          <div class="demo-browser__dots">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="demo-browser__url" id="demoUrl">folio-dashboard.vercel.app</div>
+        </div>
+        <div class="demo-browser__screen">
+          <div class="demo-screen-placeholder">
+            <span class="demo-screen-label">LIVE</span>
+            <p class="demo-screen-sub">切換至瀏覽器查看 Demo</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       05 — 技術架構
+  ═══════════════════════════════════════ -->
+  <section class="s" id="s05" data-chapter="05" data-label="架構" data-bg="#FAF9F6">
+    <div class="s__inner s__inner--wide">
+      <span class="s__eyebrow">05 — 技術架構</span>
+      <div class="stack-layout">
+        <h2 class="stack-heading">四層架構</h2>
+        <div class="stack">
+          <div class="stack-row">
+            <span class="stack-layer-label" style="color:var(--indigo)">Frontend</span>
+            <div class="stack-pills">
+              <span class="pill pill--indigo">Next.js 14</span>
+              <span class="pill pill--indigo">TypeScript</span>
+              <span class="pill pill--indigo">Tailwind CSS</span>
+              <span class="pill pill--indigo">shadcn/ui</span>
+            </div>
+          </div>
+          <div class="stack-connector"></div>
+          <div class="stack-row">
+            <span class="stack-layer-label" style="color:var(--cyan)">Backend</span>
+            <div class="stack-pills">
+              <span class="pill pill--cyan">FastAPI</span>
+              <span class="pill pill--cyan">Python 3.11</span>
+              <span class="pill pill--cyan">REST API</span>
+            </div>
+          </div>
+          <div class="stack-connector"></div>
+          <div class="stack-row">
+            <span class="stack-layer-label" style="color:var(--violet)">Data</span>
+            <div class="stack-pills">
+              <span class="pill pill--violet">yfinance</span>
+              <span class="pill pill--violet">SQLite</span>
+              <span class="pill pill--violet">Groq AI</span>
+            </div>
+          </div>
+          <div class="stack-connector"></div>
+          <div class="stack-row">
+            <span class="stack-layer-label" style="color:var(--emerald)">Deploy</span>
+            <div class="stack-pills">
+              <span class="pill pill--emerald">Vercel</span>
+              <span class="pill pill--emerald">Render</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       06 — 代理型 AI
+  ═══════════════════════════════════════ -->
+  <section class="s" id="s06" data-chapter="06" data-label="Agent AI" data-bg="#FAF9F6">
+    <div class="s__inner s__inner--wide">
+      <span class="s__eyebrow">06 — 代理型 AI</span>
+      <div class="ai-compare">
+        <div class="ai-panel ai-panel--gen">
+          <span class="ai-panel__tag">生成式 AI</span>
+          <div class="ai-flow ai-flow--linear">
+            <div class="ai-node">提示詞</div>
+            <div class="ai-arrow">↓</div>
+            <div class="ai-node ai-node--output">輸出</div>
+          </div>
+          <p class="ai-desc">一次性生成<br>無記憶 · 無工具 · 無迭代</p>
+        </div>
+        <div class="ai-divider-v"></div>
+        <div class="ai-panel ai-panel--agent">
+          <span class="ai-panel__tag" style="color:var(--indigo)">代理型 AI</span>
+          <div class="ai-flow ai-flow--loop">
+            <div class="ai-node ai-node--start">目標</div>
+            <div class="ai-loop-ring">
+              <span class="ai-loop-step">計劃</span>
+              <span class="ai-loop-arrow">→</span>
+              <span class="ai-loop-step">行動</span>
+              <span class="ai-loop-arrow">→</span>
+              <span class="ai-loop-step">驗證</span>
+              <span class="ai-loop-arrow">→</span>
+            </div>
+            <div class="ai-node ai-node--memory">記憶 ＋ 工具</div>
+          </div>
+          <p class="ai-desc" style="color:var(--indigo)">持續迭代<br>有記憶 · 能使用工具 · 自我修正</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       07 — 協作框架
+  ═══════════════════════════════════════ -->
+  <section class="s" id="s07" data-chapter="07" data-label="框架" data-bg="#FAF9F6">
+    <div class="s__inner s__inner--wide">
+      <span class="s__eyebrow">07 — 協作框架</span>
+      <h2 class="collab-heading">Human × AI 協作迴圈</h2>
+      <div class="collab-flow">
+        <div class="collab-step" data-step="1">
+          <div class="collab-step__dot" style="background:var(--indigo)"></div>
+          <span class="collab-step__num">01</span>
+          <span class="collab-step__label">需求描述</span>
+          <span class="collab-step__sub">Human</span>
+        </div>
+        <div class="collab-connector"></div>
+        <div class="collab-step" data-step="2">
+          <div class="collab-step__dot" style="background:var(--cyan)"></div>
+          <span class="collab-step__num">02</span>
+          <span class="collab-step__label">計劃 + 執行</span>
+          <span class="collab-step__sub">AI Agent</span>
+        </div>
+        <div class="collab-connector"></div>
+        <div class="collab-step" data-step="3">
+          <div class="collab-step__dot" style="background:var(--violet)"></div>
+          <span class="collab-step__num">03</span>
+          <span class="collab-step__label">審核 + 修正</span>
+          <span class="collab-step__sub">Human</span>
+        </div>
+        <div class="collab-connector"></div>
+        <div class="collab-step" data-step="4">
+          <div class="collab-step__dot" style="background:var(--emerald)"></div>
+          <span class="collab-step__num">04</span>
+          <span class="collab-step__label">記憶 + 學習</span>
+          <span class="collab-step__sub">AI Agent</span>
+        </div>
+      </div>
+      <p class="collab-note">不是命令 AI，是與 AI 共同設計系統。</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       08 — 結語
+  ═══════════════════════════════════════ -->
+  <section class="s" id="s08" data-chapter="08" data-label="結語" data-bg="#EDEAE3">
+    <div class="s__inner">
+      <span class="s__eyebrow">08 — 結語</span>
+      <div class="closing-wrap">
+        <p class="closing-quote" id="closingQuote">協作不是依賴，是放大。</p>
+        <div class="closing-line"></div>
+        <p class="closing-credit">Xander · 資料科學系 · 2026</p>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

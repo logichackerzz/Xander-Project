@@ -1,0 +1,33 @@
+{
+  "my_courses": {
+    "url": "https://netreg.isu.edu.tw/Wapp/wap_00/wap_000011.asp",
+    "status": 200,
+    "tables": [],
+    "text": "[我的學號/職號  000011]_92 我的學號/職號My Student ID_92 學號 Student ID 11240004A 姓名 Name 李凱軒LEE KAI-SYUAN 系所 Department 智慧科技學院 College of Intelligent Science and Technology 資料科學與大數據分析學系 Department of Data Science and Analytics 資料科學三 A MATH 3"
+  },
+  "profile": {
+    "url": "https://netreg.isu.edu.tw/Wapp/wap_00/wap_001400.asp",
+    "status": 200,
+    "tables": [
+      [
+        [
+          "簽署情況Signing Status",
+          "簽署時間Signing Time",
+          "簽署內容Content"
+        ],
+        [
+          "閱讀了解並已告知法定代理人或監護人I have read, understood, and informed my statutory agent or guardian of the statement",
+          "2023/8/17 下午 03:18:42",
+          "2018 B02【Ⅰ】"
+        ]
+      ]
+    ],
+    "text": "[個人基本資料  001400]_92 個人資料_92 學生基本資料 Student Info 學號 Student ID 11240004A 姓名 Name 李凱軒 LEE KAI-SYUAN 出生日期 Date of Birth 2005-08-23 手機 Mobile 0965819823 連絡電話 Phone No. 03-8536523 英文姓名 Name in English LEE KAI-SYUAN 英文姓名為畢業證書使用，若有誤，請至註冊組修改。 監護人手機 Custodian's Mobile 0912763932 監護人姓名 Name of Custodian 李漢龍 永久地址 Houserhold Registration Address 花蓮縣吉安鄉慶豐村慶北三街627號 通訊地址 Mailing Address 花蓮縣吉安鄉慶豐村慶北三街627號 上述資料若有錯誤，請至註冊組修正，以免漏失相關重要通知。 Please contact the Registration Section if any information provided above need"
+  },
+  "course_query": {
+    "url": "https://netreg.isu.edu.tw/Wapp/wap_11/wap_110130.asp",
+    "status": 200,
+    "tables": [],
+    "text": "[獎狀查詢下載  110130]_92 書卷獎查詢列印-92 查無資料。02"
+  }
+}

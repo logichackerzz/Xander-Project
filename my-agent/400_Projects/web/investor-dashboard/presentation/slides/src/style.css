@@ -1,0 +1,973 @@
+/* ══════════════════════════════════════════════════
+   Design Tokens — Warm Editorial × Folio Colors
+══════════════════════════════════════════════════ */
+:root {
+  /* ── Base（直接沿用 Folio LayoutShell 的背景色） ── */
+  --bg:           #F4F3FF;
+  --bg-alt:       #EDECF8;
+  --bg-deep:      #E4E2F0;
+  --text:         #1A1612;
+  --text-dim:     rgba(26,22,18,0.55);
+  --text-muted:   rgba(26,22,18,0.28);
+  --border:       rgba(26,22,18,0.10);
+
+  /* ── Folio 四色（在亮色背景下稍微加深飽和） ─── */
+  --indigo:       #4F46E5;
+  --indigo-lt:    #6366F1;
+  --indigo-glow:  rgba(79,70,229,0.12);
+
+  --cyan:         #0891B2;
+  --cyan-lt:      #06B6D4;
+  --cyan-glow:    rgba(8,145,178,0.12);
+
+  --violet:       #7C3AED;
+  --violet-lt:    #8B5CF6;
+  --violet-glow:  rgba(124,58,237,0.12);
+
+  --emerald:      #059669;
+  --emerald-lt:   #10B981;
+  --emerald-glow: rgba(5,150,105,0.10);
+
+  /* ── Convenience aliases ─────────────────────── */
+  --accent:       var(--indigo);
+  --accent-lt:    var(--indigo-lt);
+
+  /* ── Type ────────────────────────────────────── */
+  --f-display:    'Space Grotesk', sans-serif;
+  --f-hero:       'Urbanist', 'Space Grotesk', sans-serif;
+  --f-naming:     'Plus Jakarta Sans', 'Space Grotesk', sans-serif;
+  --f-script:     'Dancing Script', cursive;
+  --f-mono:       'IBM Plex Mono', monospace;
+
+  --ease-expo:    cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ══════════════════════════════════════════════════
+   Reset
+══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  font-size: 16px;
+  scroll-behavior: auto;
+  scrollbar-width: none;       /* Firefox */
+}
+html::-webkit-scrollbar { display: none; }  /* Chrome / Safari / Edge */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--f-display);
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+body::-webkit-scrollbar { display: none; }
+
+/* ══════════════════════════════════════════════════
+   Aurora Blobs — 1:1 Folio LayoutShell
+   blob-float-* + color-* 完全對應 globals.css
+══════════════════════════════════════════════════ */
+.orbs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  /* 不加 overflow:hidden，讓 blur 正常擴散（跟 Folio 一樣） */
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(64px);   /* blur-3xl */
+  will-change: transform, background-color;
+}
+
+/* Blob 1 — top-left，Indigo */
+.orb--1 {
+  width: 640px; height: 640px;
+  top: -160px; left: -160px;
+  animation:
+    blob-float-1 11s ease-in-out infinite,
+    color-indigo  7s ease-in-out infinite;
+}
+/* Blob 2 — top-right，Cyan */
+.orb--2 {
+  width: 580px; height: 580px;
+  top: -96px; right: -192px;
+  animation:
+    blob-float-2 14s ease-in-out infinite,
+    color-cyan    9s ease-in-out infinite;
+}
+/* Blob 3 — bottom-left，Violet */
+.orb--3 {
+  width: 540px; height: 540px;
+  bottom: 0; left: -96px;
+  animation:
+    blob-float-3 12s ease-in-out infinite,
+    color-violet  8s ease-in-out infinite;
+}
+/* Blob 4 — bottom-right quarter，Emerald */
+.orb--4 {
+  width: 560px; height: 560px;
+  bottom: 64px; right: 25%;
+  animation:
+    blob-float-4 15s ease-in-out infinite,
+    color-orange 11s ease-in-out infinite;
+}
+
+/* ── 位移動畫（直接從 Folio globals.css 複製）─── */
+@keyframes blob-float-1 {
+  0%,100% { transform: translate3d(0px,   0px,  0) scale(1);    }
+  33%      { transform: translate3d(28px, -20px, 0) scale(1.05); }
+  66%      { transform: translate3d(-18px, 16px, 0) scale(0.96); }
+}
+@keyframes blob-float-2 {
+  0%,100% { transform: translate3d(0px,   0px,  0) scale(1);    }
+  33%      { transform: translate3d(-24px, 18px, 0) scale(1.07); }
+  66%      { transform: translate3d(20px, -14px, 0) scale(0.95); }
+}
+@keyframes blob-float-3 {
+  0%,100% { transform: translate3d(0px,  0px,   0) scale(1);    }
+  40%      { transform: translate3d(18px,  22px, 0) scale(1.04); }
+  70%      { transform: translate3d(-24px,-10px, 0) scale(0.97); }
+}
+@keyframes blob-float-4 {
+  0%,100% { transform: translate3d(0px,   0px,  0) scale(1);    }
+  30%      { transform: translate3d(-20px,-16px, 0) scale(1.06); }
+  65%      { transform: translate3d(22px,  18px, 0) scale(0.94); }
+}
+
+/* ── 顏色呼吸動畫（直接從 Folio globals.css 複製）── */
+@keyframes color-indigo {
+  0%,100% { background-color: rgb(129 140 248 / 0.18); }
+  50%      { background-color: rgb(99  102 241 / 0.22); }
+}
+@keyframes color-cyan {
+  0%,100% { background-color: rgb(34  211 238 / 0.15); }
+  50%      { background-color: rgb(6   182 212 / 0.20); }
+}
+@keyframes color-violet {
+  0%,100% { background-color: rgb(167 139 250 / 0.16); }
+  50%      { background-color: rgb(192 132 252 / 0.20); }
+}
+@keyframes color-orange {
+  0%,100% { background-color: rgb(52  211 153 / 0.14); }
+  50%      { background-color: rgb(16  185 129 / 0.18); }
+}
+
+/* ══════════════════════════════════════════════════
+   Page Transition Overlay
+   curtain: clip-path inset(bottom) 100%→0% = falls from top
+            then inset(top)         0%→100% = lifts off top
+══════════════════════════════════════════════════ */
+/* ── FOLIO Word Sweep Transition ─────────────────
+   "FOLIO" in giant gradient text flies across the screen.
+   The word itself becomes the page-turn moment.
+   Forward: letters enter from right → exit left
+   Backward: letters enter from left → exit right
+─────────────────────────────────────────────── */
+.page-trans {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Full-screen bg that flashes on during transition */
+.pt-bg {
+  position: absolute;
+  inset: 0;
+  background: #F4F3FF;   /* matches slide bg — seamless flash */
+  opacity: 0;
+  will-change: opacity;
+}
+
+/* Letter row — horizontally centred, vertically centred */
+.pt-folio {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2px, 0.5vw, 8px);
+}
+
+/* Individual letters */
+.pt-l {
+  font-family: 'Plus Jakarta Sans', 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: clamp(88px, 16.5vw, 220px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  /* Same gradient as hero title — visual continuity */
+  background: linear-gradient(135deg,
+    var(--indigo)    0%,
+    var(--violet)   50%,
+    var(--indigo-lt) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  /* Hidden by default — GSAP controls visibility during slogan sweep */
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* ── GSAP-style Sticker Badge ────────────────────
+   Circular badge with rotating text + float animation.
+   Positioned absolutely inside each section.
+─────────────────────────────────────────────── */
+.sticker {
+  position: absolute;
+  bottom: 64px;
+  right: 80px;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-14deg);
+  opacity: 0;           /* hidden — revealed by GSAP enter() */
+  will-change: transform, opacity;
+  animation: sticker-float 4s ease-in-out infinite;
+  animation-play-state: paused;  /* starts when enter() fires */
+}
+
+.sticker__ring {
+  position: absolute;
+  inset: 0;
+  animation: sticker-spin 14s linear infinite;
+  animation-play-state: inherit;
+}
+
+.sticker__text {
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.18em;
+  fill: var(--indigo);
+  text-transform: uppercase;
+}
+
+.sticker__icon {
+  position: relative;
+  z-index: 1;
+  font-size: 28px;
+  color: var(--indigo);
+  line-height: 1;
+  /* subtle pulse */
+  animation: sticker-pulse 3s ease-in-out infinite;
+  animation-play-state: inherit;
+}
+
+/* Sticker background disc */
+.sticker::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+@keyframes sticker-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes sticker-float {
+  0%, 100% { translate: 0 0; }
+  50%       { translate: 0 -8px; }
+}
+@keyframes sticker-pulse {
+  0%, 100% { scale: 1;    opacity: 0.8; }
+  50%       { scale: 1.12; opacity: 1;   }
+}
+
+/* ══════════════════════════════════════════════════
+   Progress Bar & Chapter Nav
+══════════════════════════════════════════════════ */
+.progress-bar {
+  position: fixed; top: 0; left: 0;
+  height: 2px; width: 0%;
+  background: linear-gradient(to right, var(--indigo), var(--cyan));
+  z-index: 1000;
+  pointer-events: none;
+}
+.chapter-nav {
+  position: fixed; top: 32px; right: 44px;
+  z-index: 100;
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.chapter-num  { color: var(--indigo); font-weight: 500; }
+.chapter-sep  { opacity: 0.4; }
+
+/* ══════════════════════════════════════════════════
+   Marquee Divider
+══════════════════════════════════════════════════ */
+.marquee-strip {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 16px 0;
+  border-top:    1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  background: var(--bg-alt);
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+.marquee-strip__track {
+  display: inline-flex;
+  align-items: center;
+  gap: 36px;
+  white-space: nowrap;
+  animation: marquee-run 24s linear infinite;
+}
+.marquee-strip--reverse .marquee-strip__track {
+  animation-direction: reverse;
+}
+.marquee-strip__track span {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.marquee-strip__track .dot        { color: var(--indigo);  opacity: 0.6; font-size: 14px; }
+.marquee-strip__track .dot-cyan   { color: var(--cyan);    opacity: 0.6; font-size: 14px; }
+.marquee-strip__track .dot-violet { color: var(--violet);  opacity: 0.6; font-size: 14px; }
+.marquee-strip__track .dot-green  { color: var(--emerald); opacity: 0.6; font-size: 14px; }
+
+@keyframes marquee-run {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ══════════════════════════════════════════════════
+   Section Base
+══════════════════════════════════════════════════ */
+.s {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100vh;
+}
+.s__inner {
+  position: relative;
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 80px;
+}
+
+/* Stub styles */
+.s__eyebrow {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  margin-bottom: 24px;
+  opacity: 0;
+}
+.s__placeholder {
+  font-size: clamp(28px, 3.5vw, 52px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-dim);
+  opacity: 0;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════
+   01 — Hero
+══════════════════════════════════════════════════ */
+.hero-eyebrow {
+  font-family: var(--f-mono);
+  font-size: clamp(11px, 1.1vw, 15px);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 44px;
+}
+
+.hero-title-wrap {
+  overflow: hidden;
+  line-height: 0.88;
+}
+.hero-title {
+  font-family: var(--f-script);
+  font-size: clamp(120px, 20vw, 300px);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 0.95;
+  display: block;
+  background: linear-gradient(135deg,
+    var(--indigo)    0%,
+    var(--violet)   50%,
+    var(--indigo-lt) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-line {
+  width: clamp(200px, 28vw, 420px);
+  height: 2px;
+  background: linear-gradient(to right, var(--indigo), var(--violet));
+  margin: 36px 0;
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
+.hero-tagline {
+  font-family: var(--f-mono);
+  font-size: clamp(13px, 1.3vw, 18px);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════
+   Shared: wide inner variant
+══════════════════════════════════════════════════ */
+.s__inner--wide {
+  align-items: center;
+  padding: 80px 100px;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════
+   02 — What is Folio? (Scattered Letter Stage)
+   GSAP-style collage: 5 giant letters float across
+   the viewport, badges interspersed, question text
+   centred in the negative space.
+══════════════════════════════════════════════════ */
+.s02-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* "What is Folio?" — floats in the centre void */
+.s02-question {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--f-display);
+  font-size: clamp(18px, 2.2vw, 34px);
+  font-weight: 400;
+  color: var(--text-dim);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+}
+.s02-question em {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── Scattered giant FOLIO letters ───────────── */
+.s02-l {
+  position: absolute;
+  font-family: var(--f-naming);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg,
+    var(--indigo)    0%,
+    var(--violet)   55%,
+    var(--indigo-lt) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  user-select: none;
+  pointer-events: none;
+  will-change: transform, opacity, filter;
+}
+
+/* F — upper left */
+.s02-l[data-i="0"] {
+  font-size: clamp(110px, 17vw, 230px);
+  top: 7%;
+  left: 5%;
+}
+/* O — upper right */
+.s02-l[data-i="1"] {
+  font-size: clamp(100px, 15vw, 200px);
+  top: 3%;
+  right: 6%;
+}
+/* L — centre left (largest — anchor letter) */
+.s02-l[data-i="2"] {
+  font-size: clamp(130px, 19vw, 260px);
+  top: 30%;
+  left: 24%;
+}
+/* I — lower left */
+.s02-l[data-i="3"] {
+  font-size: clamp(90px, 13vw, 175px);
+  bottom: 23%;
+  left: 10%;
+}
+/* O — lower right */
+.s02-l[data-i="4"] {
+  font-size: clamp(115px, 17vw, 230px);
+  bottom: 15%;
+  right: 5%;
+}
+
+/* ── Sticker badges ──────────────────────────── */
+
+/* Badge A — rotating ring, upper centre-right */
+.s02-badge--a {
+  position: absolute;
+  top: 15%;
+  left: 55%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.s02-badge--a::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+}
+.s02-badge__ring {
+  position: absolute;
+  inset: 0;
+  animation: sticker-spin 16s linear infinite;
+  animation-play-state: paused;
+}
+.s02-badge__text {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  fill: var(--indigo);
+  text-transform: uppercase;
+}
+.s02-badge__icon {
+  position: relative;
+  z-index: 1;
+  font-size: 22px;
+  color: var(--indigo);
+  animation: sticker-pulse 3.2s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+/* Badge B — pill, centre right */
+.s02-badge--b {
+  position: absolute;
+  top: 46%;
+  right: 8%;
+  background: var(--indigo-glow);
+  border: 1.5px solid rgba(79, 70, 229, 0.25);
+  border-radius: 100px;
+  padding: 10px 22px;
+  font-family: var(--f-mono);
+  font-size: clamp(11px, 1vw, 13px);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--indigo);
+  white-space: nowrap;
+}
+
+/* Badge C — year stamp, lower centre */
+.s02-badge--c {
+  position: absolute;
+  bottom: 26%;
+  left: 46%;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1.5px solid rgba(124, 58, 237, 0.20);
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-family: var(--f-mono);
+  font-size: clamp(13px, 1.2vw, 16px);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--violet);
+}
+
+/* ══════════════════════════════════════════════════
+   03 — 功能宗旨
+══════════════════════════════════════════════════ */
+.feat-heading {
+  font-size: clamp(28px, 3vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: clamp(32px, 3.5vw, 52px);
+  opacity: 0;
+  transform: translateY(20px);
+}
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.feat-card {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 28px;
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transform: translateY(32px);
+}
+.feat-icon {
+  font-size: 28px;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+.feat-icon--indigo { color: var(--indigo); }
+.feat-icon--cyan   { color: var(--cyan); }
+.feat-icon--violet { color: var(--violet); }
+.feat-title {
+  font-size: clamp(18px, 1.6vw, 22px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.feat-body {
+  font-size: clamp(13px, 1.1vw, 15px);
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+/* ══════════════════════════════════════════════════
+   04 — Live Demo
+══════════════════════════════════════════════════ */
+.demo-browser {
+  width: clamp(520px, 72vw, 900px);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 80px rgba(79,70,229,0.10);
+  opacity: 0;
+}
+.demo-browser__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.85);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+.demo-browser__dots {
+  display: flex; gap: 6px;
+}
+.demo-browser__dots span {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.demo-browser__dots span:nth-child(1) { background: #ff6058; }
+.demo-browser__dots span:nth-child(2) { background: #ffbd2e; }
+.demo-browser__dots span:nth-child(3) { background: #28c941; }
+.demo-browser__url {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  background: rgba(26,22,18,0.05);
+  padding: 4px 12px;
+  border-radius: 6px;
+  flex: 1;
+  text-align: center;
+}
+.demo-browser__screen {
+  height: clamp(280px, 36vw, 480px);
+  background: rgba(244,243,255,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.demo-screen-placeholder {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.demo-screen-label {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  background: var(--indigo-glow);
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+.demo-screen-sub {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════════════
+   05 — 技術架構
+══════════════════════════════════════════════════ */
+.stack-layout {
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+}
+.stack-heading {
+  font-size: clamp(28px, 3vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: clamp(32px, 3.5vw, 52px);
+  opacity: 0;
+  transform: translateY(16px);
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.stack-row {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 18px 0;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+.stack-connector {
+  width: 2px;
+  height: 20px;
+  margin-left: 74px;
+  background: linear-gradient(to bottom, var(--border), transparent);
+}
+.stack-layer-label {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+  width: 72px;
+  flex-shrink: 0;
+}
+.stack-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pill {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-weight: 500;
+}
+.pill--indigo { background: var(--indigo-glow);  color: var(--indigo); border: 1px solid rgba(79,70,229,0.2); }
+.pill--cyan   { background: var(--cyan-glow);    color: var(--cyan);   border: 1px solid rgba(8,145,178,0.2); }
+.pill--violet { background: var(--violet-glow);  color: var(--violet); border: 1px solid rgba(124,58,237,0.2); }
+.pill--emerald{ background: var(--emerald-glow); color: var(--emerald);border: 1px solid rgba(5,150,105,0.2); }
+
+/* ══════════════════════════════════════════════════
+   06 — 代理型 AI
+══════════════════════════════════════════════════ */
+.ai-compare {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  margin-top: 8px;
+}
+.ai-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 36px 40px;
+  opacity: 0;
+  transform: translateY(24px);
+}
+.ai-panel--gen   { border-right: 1px solid var(--border); }
+.ai-panel__tag {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.ai-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.ai-node {
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dim);
+  background: rgba(255,255,255,0.5);
+  text-align: center;
+}
+.ai-node--output { background: rgba(26,22,18,0.04); }
+.ai-node--start  { background: var(--indigo-glow); color: var(--indigo); border-color: rgba(79,70,229,0.25); }
+.ai-node--memory { background: var(--violet-glow); color: var(--violet); border-color: rgba(124,58,237,0.2); font-size: 13px; }
+.ai-arrow {
+  color: var(--text-muted);
+  font-size: 18px;
+}
+.ai-loop-ring {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px dashed rgba(79,70,229,0.3);
+  border-radius: 10px;
+  background: var(--indigo-glow);
+}
+.ai-loop-step {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--indigo);
+}
+.ai-loop-arrow {
+  font-size: 12px;
+  color: rgba(79,70,229,0.5);
+}
+.ai-divider-v {
+  width: 1px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+.ai-desc {
+  font-size: clamp(13px, 1.1vw, 15px);
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════════════
+   07 — 協作框架
+══════════════════════════════════════════════════ */
+.collab-heading {
+  font-size: clamp(24px, 2.8vw, 40px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: clamp(36px, 4vw, 56px);
+  opacity: 0;
+  transform: translateY(16px);
+}
+.collab-flow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  max-width: 840px;
+  margin: 0 auto 40px;
+}
+.collab-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.collab-step__dot {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  opacity: 0.85;
+}
+.collab-step__num {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+}
+.collab-step__label {
+  font-size: clamp(14px, 1.3vw, 17px);
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+}
+.collab-step__sub {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.collab-connector {
+  flex: 0.3;
+  height: 1px;
+  background: var(--border);
+  margin-top: 22px;
+}
+.collab-note {
+  font-size: clamp(14px, 1.3vw, 17px);
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  font-style: italic;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+/* ══════════════════════════════════════════════════
+   08 — 結語
+══════════════════════════════════════════════════ */
+.closing-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+.closing-quote {
+  font-family: var(--f-hero);
+  font-size: clamp(32px, 5vw, 76px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text);
+  text-align: center;
+  max-width: 900px;
+  opacity: 0;
+}
+.closing-line {
+  width: clamp(80px, 12vw, 180px);
+  height: 2px;
+  background: linear-gradient(to right, var(--indigo), var(--violet));
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+.closing-credit {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0;
+}

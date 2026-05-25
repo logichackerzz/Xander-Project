@@ -1,0 +1,311 @@
+@import "tailwindcss";
+
+:root {
+  --bg:      #F2EBE0;
+  --card:    #FDFAF6;
+  --text:    #27180E;
+  --sub:     #7A6050;
+  --muted:   #B3A090;
+  --accent:  #B85C38;
+  --gold:    #9C7A3C;
+  --danger:  #8B1C1C;
+  --shield:  #2C4A6A;
+  --border:  rgba(139, 110, 85, 0.2);
+  --shadow:  rgba(44, 26, 10, 0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans TC', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ── */
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 1.25rem 5rem;
+}
+
+/* ── Header ── */
+.page-header {
+  text-align: center;
+  padding: 3rem 1rem 2.5rem;
+}
+
+.header-season {
+  display: inline-block;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  padding: 2px 12px;
+  margin-bottom: 1rem;
+  border-radius: 2px;
+}
+
+.header-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+}
+
+.header-divider {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 1.2rem auto 0.8rem;
+}
+
+.header-sub {
+  color: var(--sub);
+  font-size: 0.88rem;
+  letter-spacing: 0.05em;
+}
+
+/* ── Legend ── */
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.8rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--sub);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend-dot-gold   { background: var(--gold); }
+.legend-dot-red    { background: var(--accent); }
+.legend-dot-blue   { background: var(--shield); }
+
+/* ── Teams Grid ── */
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Team Card ── */
+.team-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 1.25rem 1.1rem 1.1rem;
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s, opacity 0.18s;
+  box-shadow: 0 2px 8px var(--shadow);
+  width: 100%;
+}
+
+.team-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px var(--shadow);
+}
+
+.team-card[data-state="selected"] {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2.5px rgba(156,122,60,0.28), 0 6px 20px var(--shadow);
+}
+
+.team-card[data-state="beaten"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(184,92,56,0.28), 0 4px 14px var(--shadow);
+}
+
+.team-card[data-state="counters"] {
+  border-color: var(--shield);
+  box-shadow: 0 0 0 2px rgba(44,74,106,0.22), 0 4px 14px var(--shadow);
+}
+
+.team-card[data-state="dim"] {
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+.card-badge {
+  position: absolute;
+  top: -11px;
+  right: 10px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 10px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.badge-beaten  { background: var(--accent); color: #fff; }
+.badge-counter { background: var(--shield); color: #fff; }
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+}
+
+.card-name {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.card-icon {
+  font-size: 1.2rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.card-chars {
+  font-size: 0.76rem;
+  color: var(--sub);
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+
+.card-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.7rem 0;
+}
+
+.card-beat-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Detail Panel ── */
+.detail-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 2px 12px var(--shadow);
+  animation: slideUp 0.22s ease both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.2rem;
+}
+
+.detail-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.detail-chars-inline {
+  font-size: 0.8rem;
+  color: var(--sub);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 580px) {
+  .detail-grid { grid-template-columns: 1fr; }
+}
+
+.detail-section-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.6rem;
+}
+
+.label-beat    { color: var(--accent); }
+.label-counter { color: var(--shield); }
+
+.detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.detail-tag {
+  font-size: 0.74rem;
+  padding: 3px 11px;
+  border-radius: 2px;
+  font-family: 'Noto Serif TC', serif;
+}
+
+.tag-beat {
+  background: rgba(184,92,56,0.1);
+  color: var(--accent);
+  border: 1px solid rgba(184,92,56,0.28);
+}
+
+.tag-counter {
+  background: rgba(44,74,106,0.1);
+  color: var(--shield);
+  border: 1px solid rgba(44,74,106,0.24);
+}
+
+.detail-desc {
+  font-size: 0.84rem;
+  color: var(--sub);
+  line-height: 1.7;
+}
+
+.detail-empty {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+
+/* ── Footer ── */
+.page-footer {
+  text-align: center;
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}

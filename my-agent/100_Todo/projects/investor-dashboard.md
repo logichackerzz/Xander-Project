@@ -127,6 +127,36 @@
 
 ---
 
+## 🚀 部署待辦（2026-05-19）
+
+### 帳號準備
+- [ ] 申請 [vercel.com](https://vercel.com) 帳號（用 GitHub 登入）
+- [ ] 申請 [render.com](https://render.com) 帳號（用 GitHub 登入）
+
+### 資料確認
+- [ ] 確認 `.env` 裡的 `GROQ_API_KEY` 還有效
+- [ ] 確認 `.env` 還有沒有其他 key 需要帶到雲端
+
+### 程式碼調整（我來做）
+- [ ] 後端 port 改讀環境變數 `$PORT`（Render 需要）
+- [ ] CORS 加上 Vercel 網域白名單
+- [ ] 確認 `requirements.txt` 是最新版本
+
+### 資料庫決策
+- [ ] 決定：SQLite（展示夠用，重啟清空）or Render PostgreSQL（資料持久）
+
+### Google Analytics
+- [ ] 去 [analytics.google.com](https://analytics.google.com) 建立資源，拿到 `G-XXXXXXXXXX`
+- [ ] 把 Measurement ID 貼給我，我加進 `layout.tsx`
+
+### 部署執行
+- [ ] 後端部署到 Render（Web Service，Python）
+- [ ] 前端部署到 Vercel（連接 GitHub repo）
+- [ ] 前端設 `NEXT_PUBLIC_API_URL` 指向 Render 後端網址
+- [ ] 測試所有頁面功能正常
+
+---
+
 ## 程式碼位置
 
 ```
