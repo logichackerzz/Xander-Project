@@ -22,6 +22,7 @@
   <!-- Page transition — FOLIO word sweep -->
   <div id="pageTrans" class="page-trans" aria-hidden="true">
     <div class="pt-bg"></div>
+    <div class="pt-vignette" id="ptVignette"></div>
     <div class="pt-folio">
       <span class="pt-l">F</span>
       <span class="pt-l">O</span>
@@ -29,6 +30,14 @@
       <span class="pt-l">I</span>
       <span class="pt-l">O</span>
     </div>
+    <div class="pt-demo">
+      <span class="pt-dl">L</span><span class="pt-dl">I</span><span class="pt-dl">V</span><span class="pt-dl">E</span><span class="pt-dl-sp">&nbsp;</span><span class="pt-dl">D</span><span class="pt-dl">E</span><span class="pt-dl">M</span><span class="pt-dl">O</span>
+    </div>
+    <div class="pt-live-badge" id="ptLiveBadge">
+      <span class="pt-live-dot"></span>
+      <span>LIVE</span>
+    </div>
+    <span class="pt-qmark" id="ptQmark">how</span>
   </div>
 
   <div class="progress-bar" id="progressBar"></div>
@@ -98,205 +107,90 @@
         <span class="s02-badge__icon">◎</span>
       </div>
 
-      <!-- Sticker B: pill label -->
-      <div class="s02-badge s02-badge--b" aria-hidden="true">
-        <span>AI × Human</span>
+      <!-- Finance 3D Stickers -->
+      <div class="s02-sticker s02-sticker--finance" aria-hidden="true">✦ Finance</div>
+      <div class="s02-sticker s02-sticker--stocks" aria-hidden="true">↑ Stocks</div>
+      <div class="s02-sticker s02-sticker--bonds" aria-hidden="true">◈ Bonds</div>
+      <div class="s02-sticker s02-sticker--rate" aria-hidden="true">% Interest Rate</div>
+
+      <!-- Beat 3: Why points (hidden until beat 3) -->
+      <div class="s02-beat3-wrap">
+        <p class="s02-beat3__line"><span class="s02-beat3__q">財報太複雜？</span><span class="s02-beat3__a">Folio 幫你讀重點。</span></p>
+        <p class="s02-beat3__line"><span class="s02-beat3__q">數據太分散？</span><span class="s02-beat3__a">Folio 整合在同一個畫面。</span></p>
+        <p class="s02-beat3__line"><span class="s02-beat3__q">判斷太困難？</span><span class="s02-beat3__a">Folio 給你市場情緒參考。</span></p>
       </div>
 
-      <!-- Sticker C: year stamp -->
-      <div class="s02-badge s02-badge--c" aria-hidden="true">
-        <span>2026</span>
+      <!-- Beat 2: big ? glyph (hidden until beat 2) -->
+      <span class="s02-qmark" aria-hidden="true">?</span>
+
+      <!-- Beat 2: Why Folio? content (hidden until beat 2) -->
+      <div class="s02-why-wrap">
+        <p class="s02-why-title">Why <em>Folio</em>?</p>
+        <div class="s02-pain">
+          <p class="s02-pain__line">為了一筆數據，你開了幾個分頁？</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- S03 — LIVE DEMO runs on overlay canvas -->
+
+  <!-- ═══════════════════════════════════════
+       03 — Checklist
+  ═══════════════════════════════════════ -->
+  <section class="s" id="s03" data-chapter="03" data-label="幕後" data-bg="#0D0D0D">
+    <div class="s03-stage">
+
+      <!-- Fixed: eyebrow -->
+      <p class="s03-eyebrow" id="s03Eyebrow">一個人的工作清單</p>
+
+      <!-- Fixed: rotating badge -->
+      <div class="s03-badge" id="s03Badge">
+        <svg class="s03-badge__ring" viewBox="0 0 240 240">
+          <defs>
+            <path id="s03-ring-path" d="M120,120 m-88,0 a88,88,0,1,1,176,0 a88,88,0,1,1,-176,0"/>
+          </defs>
+          <text class="s03-badge__text">
+            <textPath href="#s03-ring-path">一個人 · 一學期 · FOLIO · 資料科學系 · 2026 · </textPath>
+          </text>
+        </svg>
+        <div class="s03-badge__inner">
+          <span class="s03-badge__num">N</span>
+          <span class="s03-badge__sub">件任務</span>
+        </div>
+      </div>
+
+
+      <!-- Ghost accent numbers -->
+      <span class="s03-ghost s03-ghost--a">42</span>
+      <span class="s03-ghost s03-ghost--b">19</span>
+
+      <!-- Three marquee tracks (injected by JS) -->
+      <div class="s03-tracks" id="s03Tracks">
+        <div class="s03-track s03-track--a"><div class="s03-inner" id="s03Inner0"></div></div>
+        <div class="s03-track s03-track--b"><div class="s03-inner" id="s03Inner1"></div></div>
+        <div class="s03-track s03-track--c"><div class="s03-inner" id="s03Inner2"></div></div>
       </div>
 
     </div>
   </section>
 
   <!-- ═══════════════════════════════════════
-       03 — 功能宗旨
+       04 — Claude Code
   ═══════════════════════════════════════ -->
-  <section class="s" id="s03" data-chapter="03" data-label="宗旨" data-bg="#F5F3EE">
-    <div class="s__inner s__inner--wide">
-      <span class="s__eyebrow">03 — 功能宗旨</span>
-      <h2 class="feat-heading">Folio 做的三件事</h2>
-      <div class="feat-grid">
-        <div class="feat-card" data-color="indigo">
-          <div class="feat-icon feat-icon--indigo">◎</div>
-          <h3 class="feat-title">即時報價</h3>
-          <p class="feat-body">精選個股最新行情<br>一眼掌握漲跌幅與成交量</p>
-        </div>
-        <div class="feat-card" data-color="cyan">
-          <div class="feat-icon feat-icon--cyan">◈</div>
-          <h3 class="feat-title">自選清單</h3>
-          <p class="feat-body">追蹤你關注的股票<br>自訂化的個人投資清單</p>
-        </div>
-        <div class="feat-card" data-color="violet">
-          <div class="feat-icon feat-icon--violet">◆</div>
-          <h3 class="feat-title">AI 摘要</h3>
-          <p class="feat-body">新聞與財報重點整理<br>讀懂市場背後的故事</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════════
-       04 — Live Demo
-  ═══════════════════════════════════════ -->
-  <section class="s" id="s04" data-chapter="04" data-label="Demo" data-bg="#FAF9F6">
-    <div class="s__inner">
-      <span class="s__eyebrow">04 — Live Demo</span>
-      <div class="demo-browser">
-        <div class="demo-browser__bar">
-          <div class="demo-browser__dots">
-            <span></span><span></span><span></span>
-          </div>
-          <div class="demo-browser__url" id="demoUrl">folio-dashboard.vercel.app</div>
-        </div>
-        <div class="demo-browser__screen">
-          <div class="demo-screen-placeholder">
-            <span class="demo-screen-label">LIVE</span>
-            <p class="demo-screen-sub">切換至瀏覽器查看 Demo</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════════
-       05 — 技術架構
-  ═══════════════════════════════════════ -->
-  <section class="s" id="s05" data-chapter="05" data-label="架構" data-bg="#FAF9F6">
-    <div class="s__inner s__inner--wide">
-      <span class="s__eyebrow">05 — 技術架構</span>
-      <div class="stack-layout">
-        <h2 class="stack-heading">四層架構</h2>
-        <div class="stack">
-          <div class="stack-row">
-            <span class="stack-layer-label" style="color:var(--indigo)">Frontend</span>
-            <div class="stack-pills">
-              <span class="pill pill--indigo">Next.js 14</span>
-              <span class="pill pill--indigo">TypeScript</span>
-              <span class="pill pill--indigo">Tailwind CSS</span>
-              <span class="pill pill--indigo">shadcn/ui</span>
-            </div>
-          </div>
-          <div class="stack-connector"></div>
-          <div class="stack-row">
-            <span class="stack-layer-label" style="color:var(--cyan)">Backend</span>
-            <div class="stack-pills">
-              <span class="pill pill--cyan">FastAPI</span>
-              <span class="pill pill--cyan">Python 3.11</span>
-              <span class="pill pill--cyan">REST API</span>
-            </div>
-          </div>
-          <div class="stack-connector"></div>
-          <div class="stack-row">
-            <span class="stack-layer-label" style="color:var(--violet)">Data</span>
-            <div class="stack-pills">
-              <span class="pill pill--violet">yfinance</span>
-              <span class="pill pill--violet">SQLite</span>
-              <span class="pill pill--violet">Groq AI</span>
-            </div>
-          </div>
-          <div class="stack-connector"></div>
-          <div class="stack-row">
-            <span class="stack-layer-label" style="color:var(--emerald)">Deploy</span>
-            <div class="stack-pills">
-              <span class="pill pill--emerald">Vercel</span>
-              <span class="pill pill--emerald">Render</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════════
-       06 — 代理型 AI
-  ═══════════════════════════════════════ -->
-  <section class="s" id="s06" data-chapter="06" data-label="Agent AI" data-bg="#FAF9F6">
-    <div class="s__inner s__inner--wide">
-      <span class="s__eyebrow">06 — 代理型 AI</span>
-      <div class="ai-compare">
-        <div class="ai-panel ai-panel--gen">
-          <span class="ai-panel__tag">生成式 AI</span>
-          <div class="ai-flow ai-flow--linear">
-            <div class="ai-node">提示詞</div>
-            <div class="ai-arrow">↓</div>
-            <div class="ai-node ai-node--output">輸出</div>
-          </div>
-          <p class="ai-desc">一次性生成<br>無記憶 · 無工具 · 無迭代</p>
-        </div>
-        <div class="ai-divider-v"></div>
-        <div class="ai-panel ai-panel--agent">
-          <span class="ai-panel__tag" style="color:var(--indigo)">代理型 AI</span>
-          <div class="ai-flow ai-flow--loop">
-            <div class="ai-node ai-node--start">目標</div>
-            <div class="ai-loop-ring">
-              <span class="ai-loop-step">計劃</span>
-              <span class="ai-loop-arrow">→</span>
-              <span class="ai-loop-step">行動</span>
-              <span class="ai-loop-arrow">→</span>
-              <span class="ai-loop-step">驗證</span>
-              <span class="ai-loop-arrow">→</span>
-            </div>
-            <div class="ai-node ai-node--memory">記憶 ＋ 工具</div>
-          </div>
-          <p class="ai-desc" style="color:var(--indigo)">持續迭代<br>有記憶 · 能使用工具 · 自我修正</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════════
-       07 — 協作框架
-  ═══════════════════════════════════════ -->
-  <section class="s" id="s07" data-chapter="07" data-label="框架" data-bg="#FAF9F6">
-    <div class="s__inner s__inner--wide">
-      <span class="s__eyebrow">07 — 協作框架</span>
-      <h2 class="collab-heading">Human × AI 協作迴圈</h2>
-      <div class="collab-flow">
-        <div class="collab-step" data-step="1">
-          <div class="collab-step__dot" style="background:var(--indigo)"></div>
-          <span class="collab-step__num">01</span>
-          <span class="collab-step__label">需求描述</span>
-          <span class="collab-step__sub">Human</span>
-        </div>
-        <div class="collab-connector"></div>
-        <div class="collab-step" data-step="2">
-          <div class="collab-step__dot" style="background:var(--cyan)"></div>
-          <span class="collab-step__num">02</span>
-          <span class="collab-step__label">計劃 + 執行</span>
-          <span class="collab-step__sub">AI Agent</span>
-        </div>
-        <div class="collab-connector"></div>
-        <div class="collab-step" data-step="3">
-          <div class="collab-step__dot" style="background:var(--violet)"></div>
-          <span class="collab-step__num">03</span>
-          <span class="collab-step__label">審核 + 修正</span>
-          <span class="collab-step__sub">Human</span>
-        </div>
-        <div class="collab-connector"></div>
-        <div class="collab-step" data-step="4">
-          <div class="collab-step__dot" style="background:var(--emerald)"></div>
-          <span class="collab-step__num">04</span>
-          <span class="collab-step__label">記憶 + 學習</span>
-          <span class="collab-step__sub">AI Agent</span>
-        </div>
-      </div>
-      <p class="collab-note">不是命令 AI，是與 AI 共同設計系統。</p>
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════════
-       08 — 結語
-  ═══════════════════════════════════════ -->
-  <section class="s" id="s08" data-chapter="08" data-label="結語" data-bg="#EDEAE3">
-    <div class="s__inner">
-      <span class="s__eyebrow">08 — 結語</span>
-      <div class="closing-wrap">
-        <p class="closing-quote" id="closingQuote">協作不是依賴，是放大。</p>
-        <div class="closing-line"></div>
-        <p class="closing-credit">Xander · 資料科學系 · 2026</p>
+  <section class="s" id="s04" data-chapter="04" data-label="Claude Code" data-bg="#1A0F00">
+    <div class="s04cc-stage">
+      <!-- Mascot field — injected by JS -->
+      <div class="s04cc-mascots" id="s04Mascots"></div>
+      <!-- Main title -->
+      <div class="s04cc-content" id="s04Content">
+        <p class="s04cc-eyebrow" id="s04Eyebrow">第二階段</p>
+        <h2 class="s04cc-title">
+          <span class="s04cc-line" id="s04LineA">Claude</span>
+          <span class="s04cc-line" id="s04LineB">Code<span class="s04cc-cursor">_</span></span>
+        </h2>
+        <p class="s04cc-sub" id="s04Sub">我怎麼跟 AI 協作建出這個系統</p>
       </div>
     </div>
   </section>

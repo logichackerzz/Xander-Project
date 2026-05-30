@@ -211,6 +211,104 @@ body::-webkit-scrollbar { display: none; }
   will-change: transform, opacity;
 }
 
+/* LIVE DEMO 容器 — 純 flex wrapper，不帶視覺樣式 */
+.pt-demo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* 個別字母 — 同 .s04-c 字號與漸層，讓過場與 S04 視覺無縫 */
+.pt-dl {
+  display: inline-block;
+  font-family: 'Plus Jakarta Sans', 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: clamp(72px, 13vw, 190px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  background: linear-gradient(135deg,
+    var(--indigo)    0%,
+    var(--violet)   55%,
+    var(--indigo-lt) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.pt-dl-sp {
+  display: inline-block;
+  width: 0.25em;
+}
+
+/* ── Spotlight vignette — 暗角聚光 ───────────────── */
+.pt-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 65% 65% at 50% 50%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── ● LIVE 指示器 ────────────────────────────── */
+/* ── 疑問轉場 ? ──────────────────────────────── */
+.pt-qmark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--f-hero);
+  font-size: clamp(180px, 26vw, 380px);
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #67e8f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 15;
+  user-select: none;
+  filter: drop-shadow(0 0 80px rgba(99, 102, 241, 0.5));
+}
+
+.pt-live-badge {
+  position: absolute;
+  top: 36px;
+  right: 44px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--f-mono);
+  font-size: 22px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 0;
+  pointer-events: none;
+}
+.pt-live-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #FF3B30;
+  flex-shrink: 0;
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  0%, 100% { opacity: 1;    transform: scale(1);    }
+  50%       { opacity: 0.15; transform: scale(0.82); }
+}
+
 /* ── GSAP-style Sticker Badge ────────────────────
    Circular badge with rotating text + float animation.
    Positioned absolutely inside each section.
@@ -463,13 +561,19 @@ body::-webkit-scrollbar { display: none; }
   left: 50%;
   transform: translate(-50%, -50%);
   font-family: var(--f-display);
-  font-size: clamp(18px, 2.2vw, 34px);
+  font-size: clamp(28px, 3.5vw, 54px);
   font-weight: 400;
   color: var(--text-dim);
   letter-spacing: 0.01em;
   white-space: nowrap;
   z-index: 10;
   pointer-events: none;
+  /* SplitText: 讓拆出的 div.char 保持 inline-block 才能做 yPercent */
+  overflow: visible;
+}
+/* SplitText 拆出的每個字元 */
+.s02-question .char {
+  display: inline-block;
 }
 .s02-question em {
   font-style: italic;
@@ -571,37 +675,162 @@ body::-webkit-scrollbar { display: none; }
   animation-play-state: paused;
 }
 
-/* Badge B — pill, centre right */
-.s02-badge--b {
+/* ── Finance 3D Stickers (GSAP-style press-stamp) ── */
+.s02-sticker {
   position: absolute;
-  top: 46%;
-  right: 8%;
-  background: var(--indigo-glow);
-  border: 1.5px solid rgba(79, 70, 229, 0.25);
-  border-radius: 100px;
-  padding: 10px 22px;
+  border-radius: 10px;
+  padding: 9px 20px;
   font-family: var(--f-mono);
-  font-size: clamp(11px, 1vw, 13px);
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  color: var(--indigo);
+  font-weight: 700;
+  font-size: clamp(11px, 1.05vw, 15px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #111;
+  border: 2.5px solid #111;
+  /* hard offset = 3D raised edge */
+  box-shadow:
+    4px 4px 0 #111,
+    0 12px 32px rgba(0, 0, 0, 0.13);
   white-space: nowrap;
+  user-select: none;
+  pointer-events: auto;
+  will-change: transform, opacity;
 }
 
-/* Badge C — year stamp, lower centre */
-.s02-badge--c {
-  position: absolute;
-  bottom: 26%;
+/* ── Sticker positions & colours ─────────────── */
+/* FINANCE — centre-top gap (between F and O letters) */
+.s02-sticker--finance {
+  background: #FFE566;
+  top: 11%;
   left: 46%;
-  background: rgba(124, 58, 237, 0.08);
-  border: 1.5px solid rgba(124, 58, 237, 0.20);
-  border-radius: 8px;
-  padding: 8px 18px;
-  font-family: var(--f-mono);
-  font-size: clamp(13px, 1.2vw, 16px);
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  color: var(--violet);
+}
+
+/* STOCKS — right-side middle */
+.s02-sticker--stocks {
+  background: #FF8EC8;
+  top: 40%;
+  right: 9%;
+}
+
+/* BONDS — lower-right quadrant */
+.s02-sticker--bonds {
+  background: #6EEEAF;
+  bottom: 38%;
+  right: 26%;
+}
+
+/* INTEREST RATE — lower-centre */
+.s02-sticker--rate {
+  background: #FF9843;
+  bottom: 9%;
+  left: 37%;
+}
+
+/* ── S02 Beat 3 — Why points ─────────────────── */
+.s02-beat3-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 12vw;
+  gap: 2.2rem;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.s02-beat3__line {
+  margin: 0;
+  font-family: var(--f-display);
+  font-size: clamp(20px, 2.6vw, 38px);
+  line-height: 1.3;
+  will-change: transform, opacity;
+}
+
+.s02-beat3__q {
+  color: var(--text-dim);
+  font-weight: 400;
+  margin-right: 0.3em;
+}
+
+.s02-beat3__a {
+  font-weight: 600;
+  background: linear-gradient(120deg, var(--indigo) 0%, var(--violet) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── S02 Beat 2 — ? glyph ────────────────────── */
+.s02-qmark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--f-naming);
+  font-weight: 800;
+  font-size: clamp(220px, 32vw, 480px);
+  line-height: 1;
+  background: linear-gradient(135deg,
+    var(--indigo)    0%,
+    var(--violet)   55%,
+    var(--indigo-lt) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  user-select: none;
+  pointer-events: none;
+  z-index: 5;  /* behind Why Folio? text, in front of letters */
+  will-change: transform, opacity;
+}
+
+/* ── S02 Beat 2 — Why Folio? wrap ───────────── */
+.s02-why-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  z-index: 20;
+  pointer-events: none;
+  text-align: center;
+}
+
+.s02-why-title {
+  font-family: var(--f-display);
+  font-size: clamp(38px, 5.5vw, 82px);
+  font-weight: 400;
+  color: var(--text-dim);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.s02-why-title em {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.s02-why-title .char {
+  display: inline-block;
+}
+
+.s02-pain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+}
+
+.s02-pain__line {
+  font-family: var(--f-display);
+  font-size: clamp(16px, 2vw, 28px);
+  color: var(--text-dim);
+  margin: 0;
+  letter-spacing: 0.01em;
 }
 
 /* ══════════════════════════════════════════════════
@@ -657,6 +886,47 @@ body::-webkit-scrollbar { display: none; }
 /* ══════════════════════════════════════════════════
    04 — Live Demo
 ══════════════════════════════════════════════════ */
+.s04-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  text-align: center;
+}
+
+/* 允許字母炸出 section 邊界 */
+.s04-stage { overflow: visible; }
+#s04       { overflow: visible; }
+html, body  { overflow-x: clip; }   /* clip 不建立 scroll container，不剪裁 transform */
+
+/* 預拆字母 — 各自帶漸層，inline-block 才能被 GSAP transform */
+.s04-c {
+  display: inline-block;
+  background: linear-gradient(135deg,
+    var(--indigo)    0%,
+    var(--violet)   55%,
+    var(--indigo-lt) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.s04-space { display: inline-block; width: 0.25em; }
+
+/* 大標題容器 — 只管版型，顏色交給 .s04-c */
+.s04-title {
+  font-family: 'Plus Jakarta Sans', 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: clamp(72px, 13vw, 190px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0;
+}
+
 .demo-browser {
   width: clamp(520px, 72vw, 900px);
   border-radius: 12px;
@@ -722,6 +992,238 @@ body::-webkit-scrollbar { display: none; }
 .demo-screen-sub {
   font-size: 15px;
   color: var(--text-muted);
+}
+
+/* ── S04 SVG 裝飾元素 ──────────────────────────── */
+.s04-deco {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* 折線圖卡片 — 左上 */
+.s04-deco--sparkline {
+  top: 8%; left: 2%;
+  width: clamp(130px, 13vw, 196px);
+  background: rgba(255,255,255,0.72);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 28px rgba(79,70,229,0.09);
+}
+.s04-deco--sparkline svg { width: 100%; display: block; }
+
+/* 甜甜圈卡片 — 右上 */
+.s04-deco--donut {
+  top: 6%; right: 2%;
+  width: clamp(100px, 9vw, 136px);
+  background: rgba(255,255,255,0.72);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 12px 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 28px rgba(79,70,229,0.09);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.s04-deco--donut svg { width: 80%; }
+
+/* 長條圖卡片 — 右下 */
+.s04-deco--bar {
+  bottom: 9%; right: 2%;
+  width: clamp(120px, 11vw, 170px);
+  background: rgba(255,255,255,0.72);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 28px rgba(79,70,229,0.09);
+}
+.s04-deco--bar svg { width: 100%; display: block; }
+
+/* K 線圖卡片 — 左下 */
+.s04-deco--candle {
+  bottom: 7%; left: 2%;
+  width: clamp(130px, 12vw, 180px);
+  background: rgba(255,255,255,0.72);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 28px rgba(79,70,229,0.09);
+}
+.s04-deco--candle svg { width: 100%; display: block; }
+
+/* 漲幅 / 跌幅 貼紙 */
+.s04-deco--gain,
+.s04-deco--loss {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 100px;
+  font-family: var(--f-mono);
+  font-weight: 700;
+  border: 2px solid #111;
+  box-shadow: 3px 3px 0 #111;
+  background: #fff;
+  white-space: nowrap;
+}
+.s04-deco--gain { top: 42%; right: 2%; color: #059669; }
+.s04-deco--loss { top: 42%; left: 2%; color: #DC2626; }
+
+.s04-deco__val  { font-size: clamp(13px, 1.1vw, 16px); letter-spacing: 0.04em; }
+.s04-deco__sub  { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.55; }
+
+/* 星形貼紙 */
+.s04-deco--star {
+  top: 12%; left: 34%;
+  width: clamp(38px, 4vw, 58px);
+}
+.s04-deco--star svg { width: 100%; display: block; }
+
+/* Bullish badge */
+.s04-deco--sentiment {
+  bottom: 11%; left: 44%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  background: #6EEEAF;
+  border: 2px solid #111;
+  border-radius: 10px;
+  box-shadow: 3px 3px 0 #111;
+  font-family: var(--f-mono);
+  font-size: clamp(11px, 1vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.s04-deco__sent-icon { font-size: 16px; }
+.s04-deco__sent-text { color: #111; }
+
+/* ✦ Sparkles */
+.s04-deco--sp1 {
+  top: 18%; right: 25%;
+  width: clamp(22px, 2.5vw, 34px);
+}
+.s04-deco--sp2 {
+  bottom: 26%; left: 27%;
+  width: clamp(16px, 1.8vw, 26px);
+}
+.s04-deco--sp1 svg,
+.s04-deco--sp2 svg { width: 100%; display: block; }
+
+/* 共用 label */
+.s04-deco__label {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════
+   04 — 開發數字 / 揭曉
+══════════════════════════════════════════════════ */
+
+/* Stats page */
+.thesis-stats {
+  display: flex;
+  gap: clamp(3rem, 9vw, 6.5rem);
+  align-items: flex-end;
+  margin-bottom: clamp(2rem, 4vh, 3rem);
+}
+
+.thesis-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.thesis-stat__num {
+  font-family: var(--f-hero);
+  font-size: clamp(4.5rem, 10vw, 8rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--indigo);
+  font-variant-numeric: tabular-nums;
+}
+
+.thesis-stat__label {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.thesis-alone {
+  font-family: var(--f-hero);
+  font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* Reveal page */
+.thesis-deny {
+  text-align: center;
+  margin-bottom: clamp(2rem, 4.5vh, 3.5rem);
+}
+
+.thesis-deny__line {
+  display: block;
+  font-family: var(--f-hero);
+  font-size: clamp(1.8rem, 3.8vw, 3rem);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.thesis-deny__line--bang {
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.thesis-divider {
+  width: clamp(120px, 18vw, 220px);
+  height: 2px;
+  background: linear-gradient(to right, var(--indigo), var(--violet));
+  margin-bottom: clamp(2rem, 4.5vh, 3.5rem);
+}
+
+.thesis-reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.thesis-reveal__name {
+  font-family: var(--f-hero);
+  font-size: clamp(2rem, 4.5vw, 3.8rem);
+  font-weight: 800;
+  color: var(--indigo);
+  letter-spacing: -0.01em;
+}
+
+.thesis-reveal__sub {
+  font-family: var(--f-mono);
+  font-size: clamp(0.75rem, 1.3vw, 1rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 
 /* ══════════════════════════════════════════════════
@@ -970,4 +1472,380 @@ body::-webkit-scrollbar { display: none; }
   text-transform: uppercase;
   color: var(--text-muted);
   opacity: 0;
+}
+
+/* ══════════════════════════════════════════════════
+   S03 — Horizontal Scroll Showcase
+══════════════════════════════════════════════════ */
+.s03-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+}
+
+/* Eyebrow */
+.s03-eyebrow {
+  position: absolute;
+  top: clamp(28px, 4vh, 48px);
+  left: clamp(32px, 5vw, 72px);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+  z-index: 30;
+  pointer-events: none;
+}
+
+/* Three-track marquee layout */
+.s03-tracks {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.8vh, 12px);
+}
+
+.s03-track {
+  width: 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+}
+
+.s03-inner {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+/* Track A & C — large white text */
+.s03-track--a .s03-item,
+.s03-track--c .s03-item {
+  font-family: var(--f-hero);
+  font-size: clamp(3.8rem, 7.5vw, 10rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+  padding: 0 0.45em;
+  line-height: 1;
+}
+
+.s03-track--a .s03-sep,
+.s03-track--c .s03-sep {
+  font-size: clamp(1rem, 2vw, 2.8rem);
+  color: rgba(255, 255, 255, 0.12);
+  padding: 0 0.05em;
+  line-height: 1;
+}
+
+/* Track B — mid-size, indigo gradient */
+.s03-track--b .s03-item {
+  font-family: var(--f-hero);
+  font-size: clamp(2rem, 4vw, 5.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, var(--indigo), var(--violet), #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding: 0 0.5em;
+  line-height: 1;
+}
+
+.s03-track--b .s03-sep {
+  font-size: clamp(0.8rem, 1.5vw, 2rem);
+  color: rgba(99, 102, 241, 0.25);
+  padding: 0 0.05em;
+  -webkit-text-fill-color: rgba(99, 102, 241, 0.25);
+  line-height: 1;
+}
+
+/* Floating chips */
+.s03-chip {
+  position: absolute;
+  font-family: var(--f-hero);
+  font-size: clamp(0.85rem, 1.25vw, 1.45rem);
+  font-weight: 700;
+  padding: 0.42em 1.1em;
+  border-radius: 12px;
+  z-index: 20;
+  pointer-events: none;
+  will-change: transform;
+  white-space: nowrap;
+}
+
+.s03-chip--green {
+  background: linear-gradient(135deg, #4ade80, #16a34a);
+  color: #052e16;
+  top: 15%;
+  left: 9%;
+}
+
+.s03-chip--purple {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  color: #fff;
+  top: 18%;
+  right: 13%;
+}
+
+.s03-chip--orange {
+  background: linear-gradient(135deg, #fb923c, #c2410c);
+  color: #fff;
+  top: calc(50% - 1.2em);
+  left: 22%;
+  font-size: clamp(1rem, 1.5vw, 1.7rem);
+  z-index: 30;
+}
+
+/* Ghost accent numbers */
+.s03-ghost {
+  position: absolute;
+  font-family: var(--f-hero);
+  font-weight: 800;
+  line-height: 1;
+  color: transparent;
+  pointer-events: none;
+  z-index: 2;
+  user-select: none;
+}
+
+.s03-ghost--a {
+  font-size: clamp(200px, 28vw, 400px);
+  -webkit-text-stroke: 2px rgba(99, 102, 241, 0.28);
+  bottom: -10%;
+  right: 2%;
+}
+
+.s03-ghost--b {
+  font-size: clamp(120px, 16vw, 220px);
+  -webkit-text-stroke: 1.5px rgba(139, 92, 246, 0.18);
+  top: -4%;
+  left: 4%;
+}
+
+
+/* Rotating badge */
+.s03-badge {
+  position: absolute;
+  right: clamp(36px, 4vw, 64px);
+  bottom: clamp(28px, 4vh, 52px);
+  width: clamp(130px, 14vw, 180px);
+  height: clamp(130px, 14vw, 180px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.s03-badge__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: s03-spin 16s linear infinite;
+}
+
+.s03-badge__text {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  fill: rgba(255, 255, 255, 0.32);
+}
+
+.s03-badge__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+}
+
+.s03-badge__num {
+  font-family: var(--f-hero);
+  font-size: clamp(36px, 5.5vw, 72px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  background: linear-gradient(135deg, var(--indigo), var(--violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.s03-badge__sub {
+  font-family: var(--f-mono);
+  font-size: clamp(8px, 0.7vw, 10px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+}
+
+@keyframes s03-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════════════
+   S04 — Claude Code
+══════════════════════════════════════════════════ */
+.s04cc-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.s04cc-mascots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.s04cc-mascot {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.s04cc-content {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 1.8vh, 24px);
+}
+
+.s04cc-eyebrow {
+  font-family: var(--f-mono);
+  font-size: clamp(11px, 1vw, 14px);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(249, 115, 22, 0.55);
+}
+
+.s04cc-title {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.22em;
+  line-height: 0.9;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.s04cc-line {
+  font-family: var(--f-hero);
+  font-size: clamp(3.8rem, 8vw, 11rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #FDE68A 0%, #FB923C 45%, #F97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+.s04cc-cursor {
+  display: inline-block;
+  -webkit-text-fill-color: #FB923C;
+  animation: s04cc-blink 1.1s step-end infinite;
+}
+
+@keyframes s04cc-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.s04cc-sub {
+  font-family: var(--f-mono);
+  font-size: clamp(12px, 1.1vw, 16px);
+  letter-spacing: 0.12em;
+  color: rgba(253, 186, 116, 0.6);
+  margin-top: clamp(8px, 1.5vh, 20px);
+}
+
+/* ══════════════════════════════════════════════════
+   S04 — Data Marquee
+══════════════════════════════════════════════════ */
+.tck-stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  gap: 0.15rem;
+}
+
+/* Edge fade */
+.tck-stage::before,
+.tck-stage::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 12vw;
+  z-index: 2;
+  pointer-events: none;
+}
+.tck-stage::before {
+  left: 0;
+  background: linear-gradient(to right, #F5F3EE 30%, transparent);
+}
+.tck-stage::after {
+  right: 0;
+  background: linear-gradient(to left, #F5F3EE 30%, transparent);
+}
+
+.tck-row {
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0.55em 0;
+  flex-shrink: 0;
+  will-change: opacity, transform;
+}
+
+.tck-inner {
+  display: inline-flex;
+  align-items: center;
+  will-change: transform;
+}
+
+.tck-item {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--f-mono);
+  font-weight: 400;
+  color: rgba(26, 22, 18, 0.28);
+  letter-spacing: 0.02em;
+  padding: 0 1em;
+  gap: 0.35em;
+  white-space: nowrap;
+}
+
+.tck-item em {
+  font-style: normal;
+  font-family: var(--f-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 1.15em;
+}
+
+.tck-sep {
+  color: rgba(26, 22, 18, 0.15);
+  font-size: 0.65em;
+  padding: 0 0.2em;
+  display: inline-block;
+  vertical-align: middle;
 }
